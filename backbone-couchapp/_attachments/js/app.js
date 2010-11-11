@@ -6,7 +6,6 @@ $(function(){
 	Backbone.couchConnector.viewName = "byCollection";
 	// If set to true, the connector will listen to the changes feed
 	// and will provide your models with real time remote updates.
-	// THIS FEATURE IS IN DEVELOPMENT
 	Backbone.couchConnector.enableChanges = true;
 	
 	// Enables Mustache.js-like templating.

@@ -11,6 +11,7 @@ Backbone.couchConnector = {
 	ddocName : "backbone",
 	// Name of the view.
 	viewName : "byCollection",
+	// Enable updates via the couchdb _changes feed
 	enableChanges : false,
 	// If `baseUrl` is set, the default uri of jquery.couch.js will be overridden.
 	// This is useful if you want to access a couch on another server e.g. `http://127.0.0.1:5984`
@@ -43,7 +44,7 @@ Backbone.couchConnector = {
 	// Fetches all docs from the given collection.
 	// Therefore all docs from the view `ddocName`/`viewName` will be requested.
 	// A simple view could look like this:
-	// 	function(doc) {
+	//	function(doc) {
 	// 		if(doc.collection) 
 	//			emit(doc.collection, doc);
 	// 	}
@@ -138,7 +139,7 @@ Backbone.couchConnector = {
 	// The _changes feed is one of the coolest things about CouchDB in my opinion.
 	// It enables you to get real time updates of changes in your database.
 	// If `enableChanges` is true the connector automatically listens to changes in the database 
-	// and updates the changed models. -> Remotely triggered `change` events in your models. YES!
+	// and updates the changed models. -> Remotely triggered events in your models and collections. YES!
 	_changes : function(model){
 		var db = this.makeDb(model);
 		var connector = this;
