@@ -130,9 +130,9 @@ $(function(){
 		
 		// Renders all comments into the table
 		refreshed : function(){
+			// reset the table
+			$("#comments").html("");
 			if(Comments.length > 0){
-				// reset the table
-				$("#comments").html("");
 				// add each element
 				Comments.each(this.addRow);
 			}
