@@ -15,7 +15,7 @@ Backbone.couchConnector = {
 	// If `baseUrl` is set, the default uri of jquery.couch.js will be overridden.
 	// This is useful if you want to access a couch on another server.
 	// Important: Be aware of the Cross-Origin Policy. 
-	baseUrl : "http://127.0.0.1:5984",
+	baseUrl : null,
 	// A simple lookup table for collections that should be synched.
 	_watchList : [],
 	getCollectionFromModel : function(model){
