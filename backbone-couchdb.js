@@ -11,6 +11,7 @@ Backbone.couchConnector = {
 	ddocName : "backbone",
 	// Name of the view.
 	viewName : "byCollection",
+	// You shouldn't use this now since it will not work properly.
 	enableChanges : false,
 	// If `baseUrl` is set, the default uri of jquery.couch.js will be overridden.
 	// This is useful if you want to access a couch on another server e.g. `http://127.0.0.1:5984`
@@ -126,6 +127,7 @@ Backbone.couchConnector = {
 			error: _error
 		});
 	},
+	// **This feature is in development. You may enable it but it doesn't work correctly.**
 	// The _changes feed is one of the coolest things about CouchDB in my opinion.
 	// It enables you to get real time updates of changes in your database.
 	// If `enableChanges` is true the connector automatically listens to changes in the database 
@@ -153,7 +155,7 @@ Backbone.couchConnector = {
 									// Currently all properties are updated, will diff in the future.
 									model.set(doc);
 								}else{
-									//EXPERIMENTAL, WILL BREAK ^^
+									//EXPERIMENTAL, WILL BREAK 
 									coll.create(doc);
 								}
 							}
