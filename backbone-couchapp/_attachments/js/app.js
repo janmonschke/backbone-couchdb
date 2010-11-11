@@ -39,7 +39,7 @@ $(function(){
 		model : CommentModel,
 		// The comments should be ordered by date
 		comparator : function(comment){
-			return (- comment.get("date"));
+			return comment.get("date");
 		}
 	});
 	
