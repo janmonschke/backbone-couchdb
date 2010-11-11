@@ -7,7 +7,7 @@ $(function(){
 	// If set to true, the connector will listen to the changes feed
 	// and will provide your models with real time remote updates.
 	// THIS FEATURE IS IN DEVELOPMENT
-	Backbone.couchConnector.enableChanges = false;
+	Backbone.couchConnector.enableChanges = true;
 	
 	// Enables Mustache.js-like templating.
 	_.templateSettings = {
@@ -78,13 +78,20 @@ $(function(){
 		
 		// Clicking the `X` leads to a deletion
 		events : {
-			"click .delete" : "deleteMe"
+			"click .delete" : "deleteMe",
+			"dblclick td" : "dummyChange"
 		},
 		
 		// If there's a change in our model, rerender it
 		initialize : function(){
-			_.bindAll(this, 'render', 'deleteMe');
+			_.bindAll(this, 'render', 'deleteMe', 'dummyChange');
 			this.model.bind('change', this.render);
+		},
+		
+		dummyChange : function(){
+			// don't update model imidiately to prevent change trigger
+			this.model.set({name:"d:"+new Date().getTime()},{silent:true});
+			this.model.save();
 		},
 		
 		render : function(){ 
@@ -95,7 +102,8 @@ $(function(){
 		
 		// Fade out the element and destroy the model
 		deleteMe : function(){
-			this.model.destroy();
+			if(this.model)
+				this.model.destroy();
 			$(this.el).fadeOut("fast",function(){
 				$(this).remove();
 			});
@@ -107,10 +115,11 @@ $(function(){
 		el: $("#comments"),
 		
 		initialize : function(){
-			_.bindAll(this, 'refreshed', 'addRow');
+			_.bindAll(this, 'refreshed', 'addRow', 'deleted');
 			
 			Comments.bind("refresh", this.refreshed);
 			Comments.bind("add", this.addRow);
+			Comments.bind("remove", this.deleted);
 		},
 		
 		// Prepends an entry row 
@@ -128,6 +137,13 @@ $(function(){
 				// add each element
 				Comments.each(this.addRow);
 			}
+		},
+		
+		// A comment has been deleted, so we rerender the table,
+		// because this update could also come from another user via the
+		// _changes feed
+		deleted : function(){
+			this.refreshed();
 		}
 		
 	});

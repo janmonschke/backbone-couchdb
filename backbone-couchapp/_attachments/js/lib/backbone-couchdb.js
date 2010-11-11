@@ -43,10 +43,10 @@ Backbone.couchConnector = {
 	// Fetches all docs from the given collection.
 	// Therefore all docs from the view `ddocName`/`viewName` will be requested.
 	// A simple view could look like this:
-	// function(doc) {
-	// 	if(doc.collection) 
-	//		emit(doc.collection, doc);
-	// }
+	// 	function(doc) {
+	// 		if(doc.collection) 
+	//			emit(doc.collection, doc);
+	// 	}
 	// doc.collection represents the url property of the collection.
 	read : function(coll, _success, _error){
 		var db = this.makeDb(coll);
@@ -56,13 +56,19 @@ Backbone.couchConnector = {
 		db.view(query,{
 			// Only return docs that have this collection's name as key.
 			keys : [collection],
-			include_docs:true,
 			success:function(result){
+				console.log("view",result);
 				if(result.rows.length > 0){
 					var arr = [];
-					// Prepare the result set for Backbon -> Only return the docs and no meta data.
+					var model = {};
+					var curr = {};
+					// Prepare the result set for Backbone -> Only return the docs and no meta data.
 					for (var i=0; i < result.rows.length; i++) {
-						arr.push(result.rows[i].doc);
+						curr = result.rows[i];
+						model = curr.value;
+						if(!model.id)
+							model.id = curr.id;
+						arr.push(model);
 					}
 					_success(arr);
 				}else{
@@ -84,6 +90,9 @@ Backbone.couchConnector = {
 		if(!data.collection){
 			data.collection = this.getCollectionFromModel(model);
 		}
+		// Backbone finds out that an element has been
+		// synched by checking for the existance of an `id` property in the model.
+		// By returning the an object with an `id` we mark the model as synched.
 		if(!data.id && data._id){
 			data.id = data._id;
 		}
@@ -92,20 +101,12 @@ Backbone.couchConnector = {
 		db.saveDoc(data,{
 			success : function(resp){
 				// When the document has been successfully created/altered, return
-				// the created/changed values. Backbone finds out that an element has been
-				// synched by checking for the existance of an `id` property in the model.
-				// By returning the an object with an `id` we mark the model as synched.
-				if(model.id)
-					_success({
-						"_id" : resp.id,
-						"_rev" : resp.rev
-					});
-				else
-					_success({
-						"id" : resp.id,
-						"_id" : resp.id,
-						"_rev" : resp.rev
-					});
+				// the created/changed values.
+				_success({
+					"id" : resp.id,
+					"_id" : resp.id,
+					"_rev" : resp.rev
+				});
 			},
 			error : _error
 		});
@@ -123,7 +124,15 @@ Backbone.couchConnector = {
 			success: function(){
 				_success();
 			},
-			error: _error
+			error: function(nr,req,e){
+				if(e == "deleted"){
+					console.log("The Doc could not be deleted because it was already deleted from the server.");
+					_success();
+				}else{
+					_error();
+				}
+				
+			}
 		});
 	},
 	// The _changes feed is one of the coolest things about CouchDB in my opinion.
@@ -140,21 +149,38 @@ Backbone.couchConnector = {
 				// Connect to the changes feed.
 				connector.changesFeed = db.changes(since,{include_docs:true});
 				connector.changesFeed.onChange(function(changes){
-					console.log("changes: ", changes);
-					var doc,coll,model;
+					var doc,coll,model,ID;
 					// Iterate over the changed docs and validate them.
 					for (var i=0; i < changes.results.length; i++) {
 						doc = changes.results[i].doc;
 						if(doc.collection){
 							coll = connector._watchList[doc.collection];
 							if(coll){
-								model = coll.get(doc.id);
+								ID = (doc.id || doc._id);
+								model = coll.get(ID);
 								if(model){
-									// Currently all properties are updated, will diff in the future.
-									model.set(doc);
+									// Check if the model on this client has changed by comparing `rev`.
+									if(doc._rev != model.get("_rev")){
+										// `doc._rev` is newer than the `rev` attribute of the model, so we update it.
+										// Currently all properties are updated, will maybe diff in the future.
+										model.set(doc);
+									}
 								}else{
-									//EXPERIMENTAL, WILL BREAK ^^
+									// Create a new element, set its id and add it to the collection.
+									if(!doc.id)
+										doc.id = doc._id;
 									coll.create(doc);
+								}
+							}
+						}else{
+							// The doc has been deleted on the server
+							if(doc._deleted){
+								// Find the doc and the corresponsing collection
+								var dd = connector.findDocAndColl(doc._id);
+								// Only if both are found, remove the doc from the collection
+								if(dd.elem && dd.coll){
+									// will trigger the `remove` event on the collection
+									dd.coll.remove(dd.elem);
 								}
 							}
 						}
@@ -162,12 +188,24 @@ Backbone.couchConnector = {
 				});
 			}
 		});
+	},
+	
+	// Finds a document and its collection by the document id
+	findDocAndColl : function(id){
+		var coll,elem;
+		for (coll in this._watchList) {
+			coll = this._watchList[coll];
+			elem = coll.get(id);
+			if(elem){
+				break;
+			}
+		}
+		return { "coll" : coll , "elem" : elem};
 	}
 };
 
 // Override the standard sync method.
 Backbone.sync = function(method, model, success, error) {
-	
 	if(method == "create" || method == "update"){
 		Backbone.couchConnector.create(model,success,error);
 	}else if(method == "read"){

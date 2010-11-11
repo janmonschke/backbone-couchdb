@@ -83,4 +83,5 @@ td.delete {
 
 td.delete:hover{
 	opacity: .9;
+	cursor: pointer;
 }
