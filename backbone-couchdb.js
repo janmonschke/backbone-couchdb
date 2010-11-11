@@ -109,7 +109,14 @@ Backbone.couchConnector = {
 					"_rev" : resp.rev
 				});
 			},
-			error : _error
+			error : function(nr){
+				// document already exists, we don't care ;)
+				if(nr == 409){
+					_error();
+				}else{
+					_error();
+				}
+			}
 		});
 	},
 	// jquery.couch.js provides the same method for updating and creating a document, 
