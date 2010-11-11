@@ -73,3 +73,14 @@ div.avatar img {
 #items ul {
   list-style: none;
 }
+
+td.delete {
+	padding: .25em;
+	background-color: #ff0000;
+	color: #fff;
+	opacity: .1;
+}
+
+td.delete:hover{
+	opacity: .9;
+}

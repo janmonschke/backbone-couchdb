@@ -9,17 +9,15 @@ $(function(){
 	// THIS FEATURE IS IN DEVELOPMENT
 	Backbone.couchConnector.enableChanges = false;
 	
+	// Enables Mustache.js-like templating.
 	_.templateSettings = {
 		interpolate : /\{\{(.+?)\}\}/g
 	};
-	
-	// Let's start our mini comment App
 	
 	// The model for a comment is kinda simple.
 	// We only need a name, a text and a date.
 	var CommentModel = Backbone.Model.extend({
 		initialize : function(){
-			console.log("init");
 			if(!this.get("name")){
 				this.set({"name": "Anonymus"});
 			}
@@ -41,12 +39,13 @@ $(function(){
 		model : CommentModel,
 		// The comments should be ordered by date
 		comparator : function(comment){
-			return comment.get("date");
+			return (- comment.get("date"));
 		}
 	});
 	
 	var Comments = new CommentList();
 	
+	// This view is responsible for creating the Comment fields.
 	var EditView = Backbone.View.extend({
 		el : $("#edit"),
 		
@@ -56,10 +55,10 @@ $(function(){
 		
 		initialize : function(){
 			_.bindAll(this, "onSubmit");
-			this.input = $("#send");
-			
 		},
 		
+		// Simply takes the vals from the input fields and 
+		// creates a new Comment.
 		onSubmit : function(){
 			var name = $("#name").val();
 			var text = $("#text").val();
@@ -71,27 +70,39 @@ $(function(){
 		}
 	});
 	
+	// Represents an comment entry
 	var EntryView = Backbone.View.extend({
 		tagName : "tr",
 		
 		template : _.template($("#entry-template").html()),
 		
+		// Clicking the `X` leads to a deletion
+		events : {
+			"click .delete" : "deleteMe"
+		},
+		
+		// If there's a change in our model, rerender it
 		initialize : function(){
-			_.bindAll(this, 'render');
+			_.bindAll(this, 'render', 'deleteMe');
 			this.model.bind('change', this.render);
-			//this.model.view = this;
-			
 		},
 		
 		render : function(){ 
-			console.log("renderEntry",this.model.toJSON());
 			var content = this.model.toJSON();
-
 			$(this.el).html(this.template(content));
 			return this;
+		},
+		
+		// Fade out the element and destroy the model
+		deleteMe : function(){
+			this.model.destroy();
+			$(this.el).fadeOut("fast",function(){
+				$(this).remove();
+			});
 		}
 	});
 	
+	// The view for all comments
 	var CommentsTable = Backbone.View.extend({
 		el: $("#comments"),
 		
@@ -100,20 +111,20 @@ $(function(){
 			
 			Comments.bind("refresh", this.refreshed);
 			Comments.bind("add", this.addRow);
-
-			Comments.fetch();
 		},
 		
+		// Prepends an entry row 
 		addRow : function(comment){
 			var view = new EntryView({model: comment});
 			var rendered = view.render().el;
 			this.el.prepend(rendered);
 		},
 		
+		// Renders all comments into the table
 		refreshed : function(){
 			if(Comments.length > 0){
 				// reset the table
-				this.$("#comments").html("<tr><td>Name</td><td>Text</td></tr>");
+				$("#comments").html("");
 				// add each element
 				Comments.each(this.addRow);
 			}
@@ -121,7 +132,15 @@ $(function(){
 		
 	});
 	
+	// The App controller initializes the app by calling `Comments.fetch()`
+	var App = Backbone.Controller.extend({
+		initialize : function(){
+			Comments.fetch();
+		}
+	});
+	
 	new EditView();
 	new CommentsTable();
+	new App();
 
 });

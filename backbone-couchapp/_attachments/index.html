@@ -11,12 +11,13 @@
         <input type="submit" id="send" />
     </div>
     
+    <p>Comments:</p>
     <table id="comments">
 
     </table>
 
     <script type="text/template" id="entry-template">
-        <td>{{name}}</td><td>{{text}}</td>
+        <td>{{name}}</td><td>{{text}}</td><td class="delete">X</td>
     </script>
   </body>
   <script type="text/javascript" src="vendor/couchapp/loader.js"></script>
