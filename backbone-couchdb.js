@@ -11,7 +11,7 @@ Backbone.couchConnector = {
 	ddocName : "backbone",
 	// Name of the view.
 	viewName : "byCollection",
-	enableChanges : true,
+	enableChanges : false,
 	// If `baseUrl` is set, the default uri of jquery.couch.js will be overridden.
 	// This is useful if you want to access a couch on another server e.g. `http://127.0.0.1:5984`
 	// Important: Be aware of the Cross-Origin Policy. 
@@ -84,6 +84,9 @@ Backbone.couchConnector = {
 		if(!data.collection){
 			data.collection = this.getCollectionFromModel(model);
 		}
+		if(!data.id && data._id){
+			data.id = data._id;
+		}
 		// jquery.couch.js automatically finds out whether the document is new 
 		// or already exists by checking for the _id property.
 		db.saveDoc(data,{
@@ -137,6 +140,7 @@ Backbone.couchConnector = {
 				// Connect to the changes feed.
 				connector.changesFeed = db.changes(since,{include_docs:true});
 				connector.changesFeed.onChange(function(changes){
+					console.log("changes: ", changes);
 					var doc,coll,model;
 					// Iterate over the changed docs and validate them.
 					for (var i=0; i < changes.results.length; i++) {
@@ -148,6 +152,9 @@ Backbone.couchConnector = {
 								if(model){
 									// Currently all properties are updated, will diff in the future.
 									model.set(doc);
+								}else{
+									//EXPERIMENTAL, WILL BREAK ^^
+									coll.create(doc);
 								}
 							}
 						}
