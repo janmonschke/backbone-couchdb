@@ -61,6 +61,9 @@ $(function(){
 		onSubmit : function(){
 			var name = $("#name").val();
 			var text = $("#text").val();
+			// sanitize user input...you never know ;)
+			name = name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+			text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 			Comments.create({
 				"name" : name,
 				"text" : text,
