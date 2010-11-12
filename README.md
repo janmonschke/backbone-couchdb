@@ -1,7 +1,7 @@
 backbone-couchdb
 ================
 
-This is a Backbone connector that overrides the default sync-behavior and connects your Backbone app to your [CouchDB](https://github.com/apache/couchdb) so that you can [RELAX](http://vimeo.com/11852209) and don't need to worry about server-side code. 
+This is a Backbone connector that overrides the default sync-behavior Backbone and connects your app to your [CouchDB](https://github.com/apache/couchdb) so that you can [RELAX](http://vimeo.com/11852209) and don't need to worry about server-side code. 
 
 Why a new connector?
 --------------------
@@ -11,7 +11,7 @@ the models that Backbone.js creates. Instead of writing a server I now only have
 containing one simple view and I'm done with server-side code and can fully concentrate on my Backbone App.
 
 Also I wanted to get real time updates when my models are changed on the server (e.g. by a second user). The CouchDB _changes feed seemed 
-like a perfect match to me.
+like a perfect match for this problem.
 
 Getting Started
 ---------------
