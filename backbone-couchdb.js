@@ -44,12 +44,14 @@ Backbone.couchConnector = {
 	// Fetches all docs from the given collection.
 	// Therefore all docs from the view `ddocName`/`viewName` will be requested.
 	// A simple view could look like this:
-	//	function(doc) {
-	// 		if(doc.collection) 
-	//			emit(doc.collection, doc);
-	// 	}
-	// doc.collection represents the url property of the collection.
-	read : function(coll, _success, _error){
+	//
+	//    function(doc) {
+	//        if(doc.collection) 
+	//            emit(doc.collection, doc);
+	//    }
+	//
+	// doc.collection represents the url property of the collection and is automatically added to the model.
+	readCollection : function(coll, _success, _error){
 		var db = this.makeDb(coll);
 		var collection = this.getCollectionFromModel(coll);
 		var query = this.ddocName + "/" + this.viewName;
@@ -58,7 +60,6 @@ Backbone.couchConnector = {
 			// Only return docs that have this collection's name as key.
 			keys : [collection],
 			success:function(result){
-				console.log("view",result);
 				if(result.rows.length > 0){
 					var arr = [];
 					var model = {};
@@ -83,6 +84,16 @@ Backbone.couchConnector = {
 			this._watchList[collection] = coll;			
 		}
 
+	},
+	// Reads the state of one specific model from the server.
+	readModel : function(model, _success, _error){
+		var db = this.makeDb(model);
+		db.openDoc(model.id,{
+			success : function(doc){
+				_success(doc);
+			},
+			error : _error
+		});
 	},
 	// Creates a document.
 	create : function(model, _success, _error){
@@ -217,7 +228,11 @@ Backbone.sync = function(method, model, success, error) {
 	if(method == "create" || method == "update"){
 		Backbone.couchConnector.create(model,success,error);
 	}else if(method == "read"){
-		Backbone.couchConnector.read(model,success,error);
+		// Decide whether to read a whole collection or just one specific model
+		if(model.collection)
+			Backbone.couchConnector.readModel(model,success,error);
+		else
+			Backbone.couchConnector.readCollection(model,success,error);
 	}else if(method == "delete"){
 		Backbone.couchConnector.delete(model,success,error);
 	}

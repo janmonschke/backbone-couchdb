@@ -81,19 +81,19 @@ $(function(){
 		// Clicking the `X` leads to a deletion
 		events : {
 			"click .delete" : "deleteMe",
-			"dblclick td" : "dummyChange"
+			"dblclick td" : "dummyFetch"
 		},
 		
 		// If there's a change in our model, rerender it
 		initialize : function(){
-			_.bindAll(this, 'render', 'deleteMe', 'dummyChange');
+			_.bindAll(this, 'render', 'deleteMe', 'dummyFetch');
 			this.model.bind('change', this.render);
 		},
 		
-		dummyChange : function(){
-			// don't update model imidiately to prevent change trigger
-			this.model.set({name:"d:"+new Date().getTime()},{silent:true});
-			this.model.save();
+		dummyFetch : function(){
+			// Fetch the state of the model from the server.
+			// Used this to test the model sync.
+			this.model.fetch();
 		},
 		
 		render : function(){ 
