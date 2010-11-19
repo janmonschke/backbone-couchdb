@@ -39,7 +39,7 @@ Give your [couchapp](https://github.com/couchapp/couchapp) some backbone
 An easy way to host single-page apps is to enclose them in a couchapp. I included a sample couchapp project to show you how to create 
 couchapps with backbone and this CouchDB connector. Also there is a step by step tutorial located in the [readme of the couchapp](https://github.com/janmonschke/backbone-couchdb/blob/master/backbone-couchapp/README.md).
 
-There is an instance of this couchapp running on [couchone](http://backbone.couchone.com/backbone-couchapp/_design/backbone-couchapp/index.html) and I uloaded a file with the [annotated source](http://janmonschke.github.com/backbone-couchdb/app.html) of the app. (Created with [docco](https://github.com/jashkenas/docco))
+There is an instance of this couchapp running on [couchone](http://backbone.couchone.com/backbone-couchapp/_design/backbone-couchapp/index.html) and I uploaded a file with the [annotated source](http://janmonschke.github.com/backbone-couchdb/app.html) of the app. (Created with [docco](https://github.com/jashkenas/docco))
 
 Dependencies
 ------------
