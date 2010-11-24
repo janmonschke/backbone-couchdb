@@ -136,7 +136,7 @@ Backbone.couchConnector = {
 		this.create(model, _success, _error);
 	},
 	// Deletes the document via the removeDoc method.
-	delete : function(model, _success, _error){
+	del : function(model, _success, _error){
 		var db = this.makeDb(model);
 		var data = model.toJSON();
 		db.removeDoc(data,{
@@ -234,7 +234,7 @@ Backbone.sync = function(method, model, success, error) {
 		else
 			Backbone.couchConnector.readCollection(model,success,error);
 	}else if(method == "delete"){
-		Backbone.couchConnector.delete(model,success,error);
+		Backbone.couchConnector.del(model,success,error);
 	}
 	
 	// Activate real time changes feed
