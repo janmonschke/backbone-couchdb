@@ -234,7 +234,7 @@ Backbone.sync = function(method, model, options) {
 		else
 			Backbone.couchConnector.readCollection(model, options.success, options.error);
 	}else if(method == "delete"){
-		Backbone.couchConnector.del(model, options.success, optionserror);
+		Backbone.couchConnector.del(model, options.success, options.error);
 	}
 	
 	// Activate real time changes feed
