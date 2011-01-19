@@ -1,0 +1,5 @@
+{
+  "name": "backbone-couchdb",
+  "description": "A couchdb connector for backbone with support for real time changes.",
+  "fetch_uri": "git://github.com/janmonschke/backbone-couchdb.git"
+}
