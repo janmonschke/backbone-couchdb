@@ -1,3 +1,5 @@
+// (c) 2011 Jan Monschke
+// backbone-couchdb.js is licensed under the MIT license.
 // I developed this connector because I didn't want to write an own server that persists 
 // the models that Backbone.js ceated. Instead I now only have to write a simple design document 
 // containing one simple view and I'm done with server-side code. 
