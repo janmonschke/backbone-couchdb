@@ -190,7 +190,7 @@ Backbone.couchConnector = {
 									// Create a new element, set its id and add it to the collection.
 									if(!doc.id)
 										doc.id = doc._id;
-									coll.create(doc);
+									coll.add(doc);
 								}
 							}
 						}else{
