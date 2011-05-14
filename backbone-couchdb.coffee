@@ -13,8 +13,13 @@ Backbone.couch_connector = con =
   
   helpers : 
     extract_collection_name : (model) ->
-      throw new Error("No url property/function!") unless (model and model.url?)
-      _name = if _.isFunction(model.url) then model.url() else model.url
+      throw new Error("No model has been passed") unless model?
+      return "" unless ((model.collection? and model.collection.url?) or model.url?)
+      if model.url?
+        _name = if _.isFunction(model.url) then model.url() else model.url
+      else
+        _name = if _.isFunction(model.collection.url) then model.collection.url() else model.collection.url
+      
       _name = _name.slice(1, _name.length) if _name[0] == "/"
       
       # jquery.couch.js adds the id itself, so we delete the id if it is in the url.
@@ -91,14 +96,25 @@ Backbone.couch_connector = con =
         opts.success(doc)
       error : ->
         opts.error()
-    
-
+  
+  create : (model, opts) ->
+    vals = model.toJSON()
+    coll = @helpers.extract_collection_name vals
+    vals.collection = coll if coll.length > 0
+    db.saveDoc vals,
+      success : (doc) ->
+        opts.success
+          _id : doc.id
+          _rev : doc.rev
+      error : ->
+        opts.error()
 
 Backbone.sync = (method, model, opts) ->
-  console.log "sync", arguments, @
+  console.log "sync", arguments
   
   switch method
-    when "read" then con.read model, opts 
+    when "read" then con.read model, opts
+    when "create" then con.create model, opts
       
 _.extend Backbone.Collection.prototype, 
   register_for_changes : ->

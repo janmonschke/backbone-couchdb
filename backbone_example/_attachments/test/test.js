@@ -18,39 +18,45 @@ test("extracts all possible urls correctly", function(){
     Backbone.couch_connector.helpers.extract_collection_name();
   }, "throws error when no model is passed to function");
   
-  raises(function(){
-    Backbone.couch_connector.helpers.extract_collection_name();
-  }, "throws error when model has no url property");
+  equals(Backbone.couch_connector.helpers.extract_collection_name({}), "", "Returns empty string when no url specified");
   
   var model_w_url_field = {
-    url : "comments"
+    collection : {
+      url : "comments" 
+    }
   };
   equals(Backbone.couch_connector.helpers.extract_collection_name(model_w_url_field), "comments", "obj with url field");
   
-  model_w_url_field.url = "comments/"
+  model_w_url_field.collection.url = "comments/"
   equals(Backbone.couch_connector.helpers.extract_collection_name(model_w_url_field), "comments", "obj with url field (trailing slash)");
   
-  model_w_url_field.url = "/comments"
+  model_w_url_field.collection.url = "/comments"
   equals(Backbone.couch_connector.helpers.extract_collection_name(model_w_url_field), "comments", "obj with url field (leading slash)");
   
-  model_w_url_field.url = "/comments/"
+  model_w_url_field.collection.url = "/comments/"
   equals(Backbone.couch_connector.helpers.extract_collection_name(model_w_url_field), "comments", "obj with url field (leading & trailing slash)");
   
   var model_w_url_field_and_id = {
-    url : "comments/3"
+    collection : {
+      url : "comments/3"
+    }
   };
   equals(Backbone.couch_connector.helpers.extract_collection_name(model_w_url_field_and_id), "comments", "obj with url field and id");
   
   var model_w_url_method = {
-    url : function(){
-      return "comments"
+    collection : {
+      url : function(){
+        return "comments"
+      } 
     }
   };
   equals(Backbone.couch_connector.helpers.extract_collection_name(model_w_url_method), "comments", "obj with url method");
   
   var model_w_url_method_and_id = {
-    url : function(){
-      return "comments/32"
+    collection : {
+      url : function(){
+        return "comments/32"
+      } 
     }
   };
   equals(Backbone.couch_connector.helpers.extract_collection_name(model_w_url_method_and_id), "comments", "obj with url method that also returns an id");
@@ -67,7 +73,6 @@ module("db relevant", {
     db = $.couch.db("backbone_test_db")
     db.create({
       success : function(){
-        console.log("created db");
         var ddoc = {
            "_id": "_design/backbone_connector_test",
            "language": "javascript",
@@ -152,6 +157,27 @@ asyncTest("read model", function(){
   raises(function(){
     broken_model.fetch();
   }, "throws error when model has no id property");
+});
+
+asyncTest("create model", function(){
+  var CommentModel = Backbone.Model.extend({});
+  
+  mymodel = new CommentModel({
+    body : "I'm new",
+    random : "string"
+  });
+  
+  mymodel.save({},{
+    success : function(model){
+      notEqual(model.id, undefined, "The model shoud have an id");
+      notEqual(model.toJSON()._id, undefined, "The model shoud have an _id when converted to JSON");
+      notEqual(model.toJSON()._rev, undefined, "The model shoud have _rev field");
+      start();
+    },
+    error : function(){
+      console.log("in err cb", arguments);
+    }
+  });
 });
 
 QUnit.done = function(){

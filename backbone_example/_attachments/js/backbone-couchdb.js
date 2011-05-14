@@ -15,10 +15,17 @@
     helpers: {
       extract_collection_name: function(model) {
         var _name, _splitted;
-        if (!(model && (model.url != null))) {
-          throw new Error("No url property/function!");
+        if (model == null) {
+          throw new Error("No model has been passed");
         }
-        _name = _.isFunction(model.url) ? model.url() : model.url;
+        if (!(((model.collection != null) && (model.collection.url != null)) || (model.url != null))) {
+          return "";
+        }
+        if (model.url != null) {
+          _name = _.isFunction(model.url) ? model.url() : model.url;
+        } else {
+          _name = _.isFunction(model.collection.url) ? model.collection.url() : model.collection.url;
+        }
         if (_name[0] === "/") {
           _name = _name.slice(1, _name.length);
         }
@@ -124,13 +131,34 @@
           return opts.error();
         }
       });
+    },
+    create: function(model, opts) {
+      var coll, vals;
+      vals = model.toJSON();
+      coll = this.helpers.extract_collection_name(vals);
+      if (coll.length > 0) {
+        vals.collection = coll;
+      }
+      return db.saveDoc(vals, {
+        success: function(doc) {
+          return opts.success({
+            _id: doc.id,
+            _rev: doc.rev
+          });
+        },
+        error: function() {
+          return opts.error();
+        }
+      });
     }
   };
   Backbone.sync = function(method, model, opts) {
-    console.log("sync", arguments, this);
+    console.log("sync", arguments);
     switch (method) {
       case "read":
         return con.read(model, opts);
+      case "create":
+        return con.create(model, opts);
     }
   };
   _.extend(Backbone.Collection.prototype, {
