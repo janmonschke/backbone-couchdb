@@ -81,19 +81,21 @@ module("db relevant", {
                    "map": "function(doc) {\n  if (doc.collection) {\n    emit(doc.collection, doc);\n  }\n};"
                },
                "testView": {
-                    "map": "function(doc) {\n  if (doc.body && doc.body == 'test3') {\n    emit(null, doc);\n  }\n};"
+                    "map": "function(doc) {\n  if (doc.body && doc.body == 'test3') {\n    emit(doc.title, doc);\n  }\n};"
                 }
            }
         };
         var test_doc_1 = { _id : "test_id_4711", collection: "comments", title: "test1", body : "test1" };
         var test_doc_2 = { collection: "comments", title: "test2", body : "test2" };
         var test_doc_3 = { collection: "tests", title: "test3", body : "test3" };
+        var test_doc_4 = { collection: "hallo", title: "test4", body : "test3" };
         ct = 0
-        opts = { success : function(){ ct++; if(ct == 4){ start(); } }, error : function(){ alert("could no create a test doc"); }};
+        opts = { success : function(){ ct++; if(ct == 5){ start(); } }, error : function(){ alert("could no create a test doc"); }};
         db.saveDoc(ddoc, opts);
         db.saveDoc(test_doc_1, opts);
         db.saveDoc(test_doc_2, opts);
         db.saveDoc(test_doc_3, opts);
+        db.saveDoc(test_doc_4, opts);
       },
       error : function(){
         stop();
@@ -142,6 +144,27 @@ asyncTest("read collection with custom view" , function(){
 	  db : {
 	    view : "testView",
 	    changes : false
+	  },
+		url : "/comments"
+	});
+	var Comments = new CommentList();
+	Comments.fetch({
+	  success : function(){
+      equals(Comments.length, 2, "Collection contains the right amount of docs after fetching");
+	    start();
+	  },
+	  error : function(){
+	    console.log("error");
+	  }
+	});
+});
+
+asyncTest("read collection with custom view and custom keys" , function(){
+	var CommentList = Backbone.Collection.extend({
+	  db : {
+	    view : "testView",
+	    changes : false,
+	    keys : ["test4"]
 	  },
 		url : "/comments"
 	});

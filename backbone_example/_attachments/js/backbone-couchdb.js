@@ -91,7 +91,7 @@
     Reads all docs of a collection based on the byCollection view or a custom view specified by the collection
     */
     read_collection: function(coll, opts) {
-      var keys, _view;
+      var keys, _ref, _view;
       _view = this.config.view_name;
       keys = [this.helpers.extract_collection_name(coll)];
       if (coll.db != null) {
@@ -100,9 +100,10 @@
         }
         if (coll.db.view != null) {
           _view = coll.db.view;
-          keys = null;
+          keys = (_ref = coll.db.keys) != null ? _ref : null;
         }
       }
+      console.log("read coll", _view, keys);
       return this.helpers.make_db().view("" + this.config.ddoc_name + "/" + _view, {
         keys: keys,
         success: __bind(function(data) {
