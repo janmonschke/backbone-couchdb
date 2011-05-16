@@ -85,24 +85,35 @@ $(function(){
 		// Clicking the `X` leads to a deletion
 		events : {
 			"click .delete" : "deleteMe",
-			"dblclick td" : "dummyFetch"
+			"dblclick td.text_content" : "editMe"
 		},
 		
 		// If there's a change in our model, rerender it
 		initialize : function(){
-			_.bindAll(this, 'render', 'deleteMe', 'dummyFetch');
+			_.bindAll(this, 'render', 'deleteMe', 'editMe', 'updateMe');
 			this.model.bind('change', this.render);
+			
 		},
 		
-		dummyFetch : function(){
+		editMe : function(ev){
 			// Fetch the state of the model from the server.
 			// Used this to test the model sync.
-			this.model.fetch();
+			$(ev.currentTarget).hide();
+			$(".edit_content", ev.currentTarget.parent).show().focus();
+		},
+		
+		updateMe : function(ev){
+		  var input = $(ev.currentTarget);
+		  this.model.set({"text" : input.val() });
+		  this.model.save();
+		  input.hide();
+		  $(".text_content", ev.currentTarget.parent).show();
 		},
 		
 		render : function(){ 
 			var content = this.model.toJSON();
 			$(this.el).html(this.template(content));
+			this.$('.edit_content').blur(this.updateMe);
 			return this;
 		},
 		
