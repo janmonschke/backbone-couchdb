@@ -91,29 +91,29 @@
     Reads all docs of a collection based on the byCollection view or a custom view specified by the collection
     */
     read_collection: function(coll, opts) {
-      var keys, view;
-      view = this.config.view_name;
+      var keys, _view;
+      _view = this.config.view_name;
       keys = [this.helpers.extract_collection_name(coll)];
       if (coll.db != null) {
         if (coll.db.changes || this.config.global_changes) {
           this._changes.add(coll);
         }
-        view != null ? view : view = coll.db.view;
+        if (coll.db.view != null) {
+          _view = coll.db.view;
+        }
       }
-      return this.helpers.make_db().view("" + this.config.ddoc_name + "/" + view, {
+      return this.helpers.make_db().view("" + this.config.ddoc_name + "/" + _view, {
         keys: keys,
-        success: function(data) {
+        success: __bind(function(data) {
           var doc, _i, _len, _ref, _temp;
-          if (data.rows.length > 0) {
-            _temp = [];
-            _ref = data.rows;
-            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-              doc = _ref[_i];
-              _temp.push(doc.value);
-            }
-            return opts.success(_temp);
+          _temp = [];
+          _ref = data.rows;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            doc = _ref[_i];
+            _temp.push(doc.value);
           }
-        },
+          return opts.success(_temp);
+        }, this),
         error: function() {
           return opts.error();
         }

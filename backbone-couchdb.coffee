@@ -72,20 +72,18 @@ Backbone.couch_connector = con =
   Reads all docs of a collection based on the byCollection view or a custom view specified by the collection
   ###
   read_collection : (coll, opts) ->
-    view = @config.view_name
+    _view = @config.view_name
     keys = [@helpers.extract_collection_name coll]
     if coll.db?
       @_changes.add coll if coll.db.changes or @config.global_changes
-      view ?= coll.db.view
-      #keys ?= coll.db.keys
-    @helpers.make_db().view "#{@config.ddoc_name}/#{view}",
+      _view = coll.db.view if coll.db.view?
+    @helpers.make_db().view "#{@config.ddoc_name}/#{_view}",
       keys : keys
-      success : (data) ->
-        if data.rows.length > 0
-          _temp = []
-          for doc in data.rows
-            _temp.push doc.value
-          opts.success _temp
+      success : (data) =>
+        _temp = []
+        for doc in data.rows
+          _temp.push doc.value
+        opts.success _temp
       error : ->
         opts.error()
 

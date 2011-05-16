@@ -79,7 +79,10 @@ module("db relevant", {
            "views": {
                "byCollection": {
                    "map": "function(doc) {\n  if (doc.collection) {\n    emit(doc.collection, doc);\n  }\n};"
-               }
+               },
+               "testView": {
+                    "map": "function(doc) {\n  if (doc.body && doc.body == 'test3') {\n    emit(null, doc);\n  }\n};"
+                }
            }
         };
         var test_doc_1 = { _id : "test_id_4711", collection: "comments", title: "test1", body : "test1" };
@@ -124,7 +127,7 @@ asyncTest("read collection" , function(){
 		model : CommentModel
 	});
 	var Comments = new CommentList();
-	
+	console.log("345");
 	Comments.fetch({
 	  success : function(){
       equals(Comments.length, 2, "Collection contains the right amount of docs after fetching");
@@ -134,6 +137,28 @@ asyncTest("read collection" , function(){
 	  }
 	});
 	
+});
+
+asyncTest("read collection with custom view" , function(){
+	var CommentList = Backbone.Collection.extend({
+	  db : {
+	    view : "testView",
+	    changes : false
+	  },
+		url : "/comments"
+	});
+	var Comments = new CommentList();
+	console.log("123");
+	Comments.fetch({
+	  success : function(){
+	    console.log("sdfsdfsdfpon");
+      equals(Comments.length, 1, "Collection contains the right amount of docs after fetching");
+	    start();
+	  },
+	  error : function(){
+	    console.log("error");
+	  }
+	});
 });
 
 asyncTest("read model", function(){
@@ -151,7 +176,7 @@ asyncTest("read model", function(){
     error : function(){
       alert("Model could not be fetched");
     }
-  })
+  });
   
   broken_model = new CommentModel();
   raises(function(){
@@ -161,21 +186,60 @@ asyncTest("read model", function(){
 
 asyncTest("create model", function(){
   var CommentModel = Backbone.Model.extend({});
-  
+	
   mymodel = new CommentModel({
     body : "I'm new",
     random : "string"
   });
   
+  mymodel.url = "";
+  
   mymodel.save({},{
     success : function(model){
       notEqual(model.id, undefined, "The model shoud have an id");
       notEqual(model.toJSON()._id, undefined, "The model shoud have an _id when converted to JSON");
-      notEqual(model.toJSON()._rev, undefined, "The model shoud have _rev field");
+      notEqual(model.toJSON()._rev, undefined, "The model shoud have a _rev field");
       start();
     },
     error : function(){
       console.log("in err cb", arguments);
+    }
+  });
+});
+
+asyncTest("update model", function(){
+  var CommentModel = Backbone.Model.extend({});
+  
+  mymodel = new CommentModel({
+    _id : "test_id_4711"
+  });
+  
+  mymodel.url = "";
+  
+  var changed_text = "I've changed!!!";
+  
+  mymodel.fetch({
+    success : function(){
+      mymodel.set({text : changed_text});
+      var the_rev = mymodel.get('_rev');
+      mymodel.save({},{
+        success : function(){
+          var new_model = new CommentModel({
+            _id : "test_id_4711"
+          });
+          new_model.fetch({
+            success: function(){
+             start();
+             equals(new_model.get('text'), changed_text, "The new text should have been saved to the model");
+             notEqual(new_model.get('_rev'), the_rev, "The _rev attribute should have changed");
+            }
+          });
+        },
+        error : function(){}
+      })
+    },
+    error : function(){
+      alert("Model could not be fetched");
     }
   });
 });
