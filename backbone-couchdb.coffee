@@ -99,9 +99,9 @@ Backbone.couch_connector = con =
   
   create : (model, opts) ->
     vals = model.toJSON()
-    coll = @helpers.extract_collection_name vals
+    coll = @helpers.extract_collection_name model
     vals.collection = coll if coll.length > 0
-    db.saveDoc vals,
+    @helpers.make_db().saveDoc vals,
       success : (doc) ->
         opts.success
           _id : doc.id

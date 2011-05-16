@@ -135,11 +135,11 @@
     create: function(model, opts) {
       var coll, vals;
       vals = model.toJSON();
-      coll = this.helpers.extract_collection_name(vals);
+      coll = this.helpers.extract_collection_name(model);
       if (coll.length > 0) {
         vals.collection = coll;
       }
-      return db.saveDoc(vals, {
+      return this.helpers.make_db().saveDoc(vals, {
         success: function(doc) {
           return opts.success({
             _id: doc.id,

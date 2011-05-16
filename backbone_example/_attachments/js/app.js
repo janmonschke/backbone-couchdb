@@ -1,9 +1,9 @@
 $(function(){
 	// Fill this with your database information.
 	// `ddocName` is the name of your couchapp project.
-	Backbone.couchConnector.databaseName = "backbone_connect";
-	Backbone.couchConnector.ddocName = "backbone_example";
-	Backbone.couchConnector.viewName = "byCollection";
+	Backbone.couch_connector.config.db_name = "backbone_connect";
+	Backbone.couch_connector.config.ddoc_name = "backbone_example";
+	Backbone.couch_connector.config.global_changes = "byCollection";
 	// If set to true, the connector will listen to the changes feed
 	// and will provide your models with real time remote updates.
 	//Backbone.couchConnector.enableChanges = true;
