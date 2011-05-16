@@ -150,6 +150,10 @@
           return opts.error();
         }
       });
+    },
+    /* jquery.couch.js uses the same method for updating as it uses for creating a document, so we can use the `create` method here. */
+    update: function(model, opts) {
+      return this.create(model, opts);
     }
   };
   Backbone.sync = function(method, model, opts) {
@@ -159,6 +163,8 @@
         return con.read(model, opts);
       case "create":
         return con.create(model, opts);
+      case "update":
+        return con.update(model, opts);
     }
   };
   _.extend(Backbone.Collection.prototype, {

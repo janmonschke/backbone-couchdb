@@ -109,12 +109,17 @@ Backbone.couch_connector = con =
       error : ->
         opts.error()
 
+  ### jquery.couch.js uses the same method for updating as it uses for creating a document, so we can use the `create` method here. ###
+  update : (model, opts) ->
+    @create(model, opts)
+
 Backbone.sync = (method, model, opts) ->
   console.log "sync", arguments
   
   switch method
     when "read" then con.read model, opts
     when "create" then con.create model, opts
+    when "update" then con.update model, opts
       
 _.extend Backbone.Collection.prototype, 
   register_for_changes : ->
