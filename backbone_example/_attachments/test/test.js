@@ -120,14 +120,12 @@ asyncTest("read collection" , function(){
   });
 	var CommentList = Backbone.Collection.extend({
 	  db : {
-	    view : "byCollection",
 	    changes : false
 	  },
 		url : "/comments",
 		model : CommentModel
 	});
 	var Comments = new CommentList();
-	console.log("345");
 	Comments.fetch({
 	  success : function(){
       equals(Comments.length, 2, "Collection contains the right amount of docs after fetching");
@@ -148,10 +146,8 @@ asyncTest("read collection with custom view" , function(){
 		url : "/comments"
 	});
 	var Comments = new CommentList();
-	console.log("123");
 	Comments.fetch({
 	  success : function(){
-	    console.log("sdfsdfsdfpon");
       equals(Comments.length, 1, "Collection contains the right amount of docs after fetching");
 	    start();
 	  },

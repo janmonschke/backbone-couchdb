@@ -100,8 +100,10 @@
         }
         if (coll.db.view != null) {
           _view = coll.db.view;
+          keys = null;
         }
       }
+      console.log("read", keys, _view);
       return this.helpers.make_db().view("" + this.config.ddoc_name + "/" + _view, {
         keys: keys,
         success: __bind(function(data) {

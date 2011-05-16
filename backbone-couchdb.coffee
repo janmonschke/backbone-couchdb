@@ -76,7 +76,10 @@ Backbone.couch_connector = con =
     keys = [@helpers.extract_collection_name coll]
     if coll.db?
       @_changes.add coll if coll.db.changes or @config.global_changes
-      _view = coll.db.view if coll.db.view?
+      if coll.db.view?
+        _view = coll.db.view
+        keys = null
+    console.log "read", keys, _view
     @helpers.make_db().view "#{@config.ddoc_name}/#{_view}",
       keys : keys
       success : (data) =>
