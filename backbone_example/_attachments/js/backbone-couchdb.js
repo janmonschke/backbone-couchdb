@@ -103,7 +103,6 @@
           keys = null;
         }
       }
-      console.log("read", keys, _view);
       return this.helpers.make_db().view("" + this.config.ddoc_name + "/" + _view, {
         keys: keys,
         success: __bind(function(data) {
@@ -156,6 +155,20 @@
     /* jquery.couch.js uses the same method for updating as it uses for creating a document, so we can use the `create` method here. */
     update: function(model, opts) {
       return this.create(model, opts);
+    },
+    del: function(model, opts) {
+      return this.helpers.make_db().removeDoc(model.toJSON(), {
+        success: function() {
+          return opts.success();
+        },
+        error: function(nr, req, e) {
+          if (e === "deleted") {
+            return opts.success();
+          } else {
+            return opts.error();
+          }
+        }
+      });
     }
   };
   Backbone.sync = function(method, model, opts) {
@@ -167,6 +180,8 @@
         return con.create(model, opts);
       case "update":
         return con.update(model, opts);
+      case "delete":
+        return con.del(model, opts);
     }
   };
   _.extend(Backbone.Collection.prototype, {

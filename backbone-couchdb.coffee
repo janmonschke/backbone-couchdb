@@ -79,7 +79,6 @@ Backbone.couch_connector = con =
       if coll.db.view?
         _view = coll.db.view
         keys = null
-    console.log "read", keys, _view
     @helpers.make_db().view "#{@config.ddoc_name}/#{_view}",
       keys : keys
       success : (data) =>
@@ -114,6 +113,17 @@ Backbone.couch_connector = con =
   update : (model, opts) ->
     @create(model, opts)
 
+  del : (model, opts) ->
+    @helpers.make_db().removeDoc model.toJSON(),
+      success : ->
+        opts.success()
+      error : (nr, req, e) ->
+        if e == "deleted"
+          # The doc does no longer exist on the server
+          opts.success()
+        else
+          opts.error()
+
 Backbone.sync = (method, model, opts) ->
   console.log "sync", arguments
   
@@ -121,6 +131,7 @@ Backbone.sync = (method, model, opts) ->
     when "read" then con.read model, opts
     when "create" then con.create model, opts
     when "update" then con.update model, opts
+    when "delete" then con.del model, opts
       
 _.extend Backbone.Collection.prototype, 
   register_for_changes : ->
