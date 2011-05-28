@@ -4,14 +4,7 @@ QUnit.begin = function(){
   Backbone.couch_connector.config.global_changes = false;
 };
 
-test("all", function(){
-  ok(true);
-});
-
-module("helpers", {
-  setup : function(){
-  }
-});
+module("helpers");
 
 test("extracts all possible urls correctly", function(){
   raises(function(){

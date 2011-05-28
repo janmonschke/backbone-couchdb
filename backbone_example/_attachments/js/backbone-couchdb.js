@@ -3,7 +3,14 @@
   (c) 2011 Jan Monschke
   backbone-couchdb.js is licensed under the MIT license.
   */  var con;
-  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
+    for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
+    function ctor() { this.constructor = child; }
+    ctor.prototype = parent.prototype;
+    child.prototype = new ctor;
+    child.__super__ = parent.prototype;
+    return child;
+  };
   Backbone.couch_connector = con = {
     config: {
       db_name: "backbone_connect",
@@ -43,43 +50,6 @@
         return db;
       }
     },
-    _changes: {
-      registered_collections: [],
-      registered_models: [],
-      handler: null,
-      _update_seq: null,
-      add: function(coll) {
-        if (this.registered_collections.indexOf(coll === -1)) {
-          this.registered_collections.push(coll);
-        }
-        if (this.handler == null) {
-          return this.activate_changes();
-        }
-      },
-      activate_changes: function() {
-        var db;
-        db = con.helpers.make_db();
-        if (typeof _update_seq != "undefined" && _update_seq !== null) {
-          return this.listen(db);
-        } else {
-          return this.prepare(db);
-        }
-      },
-      prepare: function(db) {
-        return db.info({
-          success: __bind(function(data) {
-            this._update_seq = data.update_seq || 0;
-            return this.listen(db);
-          }, this)
-        });
-      },
-      listen: function(db) {
-        this.handler = db.changes(this._update_seq);
-        return this.handler.onChange(__bind(function(changes) {
-          return console.log("change", changes);
-        }, this));
-      }
-    },
     read: function(model, opts) {
       if (model.models) {
         return con.read_collection(model, opts);
@@ -96,14 +66,13 @@
       keys = [this.helpers.extract_collection_name(coll)];
       if (coll.db != null) {
         if (coll.db.changes || this.config.global_changes) {
-          this._changes.add(coll);
+          coll.listen_to_changes();
         }
         if (coll.db.view != null) {
           _view = coll.db.view;
           keys = (_ref = coll.db.keys) != null ? _ref : null;
         }
       }
-      console.log("read coll", _view, keys);
       return this.helpers.make_db().view("" + this.config.ddoc_name + "/" + _view, {
         keys: keys,
         success: __bind(function(data) {
@@ -185,15 +154,63 @@
         return con.del(model, opts);
     }
   };
-  _.extend(Backbone.Collection.prototype, {
-    register_for_changes: function() {
-      return con._changes.add(this);
+  Backbone.Collection = (function() {
+    function Collection() {
+      this._db_on_change = __bind(this._db_on_change, this);;
+      this._db_prepared_for_changes = __bind(this._db_prepared_for_changes, this);;      Collection.__super__.constructor.apply(this, arguments);
     }
-  });
-  _.extend(Backbone.Model.prototype, {
-    idAttribute: "_id",
-    register_for_changes: function() {
-      return con._changes.add(this);
+    __extends(Collection, Backbone.Collection);
+    Collection.prototype.initialize = function() {
+      if (!this._db_changes_enabled && this.db.changes === true) {
+        return this.listen_to_changes();
+      }
+    };
+    Collection.prototype.listen_to_changes = function() {
+      if (!this._db_changes_enabled) {
+        this._db_changes_enabled = true;
+        if (!this._db_inst) {
+          this._db_inst = con.helpers.make_db();
+        }
+        return this._db_inst.info({
+          "success": this._db_prepared_for_changes
+        });
+      }
+    };
+    Collection.prototype._db_prepared_for_changes = function(data) {
+      var opts;
+      this._db_update_seq = data.update_seq || 0;
+      opts = {
+        include_docs: true,
+        collection: con.helpers.extract_collection_name(this),
+        filter: "" + con.config.ddoc_name + "/by_collection"
+      };
+      _.extend(opts, this.db);
+      return _.defer(__bind(function() {
+        return this._db_inst.changes(this._db_update_seq, opts).onChange(this._db_on_change);
+      }, this));
+    };
+    Collection.prototype._db_on_change = function(changes) {
+      var obj, _doc, _i, _len, _ref, _results;
+      _ref = changes.results;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        _doc = _ref[_i];
+        obj = this.get(_doc.id);
+        _results.push(obj != null ? _doc.deleted ? this.remove(obj) : obj.get("_rev") !== _doc.doc._rev ? obj.set(_doc.doc) : void 0 : !_doc.deleted ? this.add(_doc.doc) : void 0);
+      }
+      return _results;
+    };
+    return Collection;
+  })();
+  Backbone.Model = (function() {
+    function Model() {
+      Model.__super__.constructor.apply(this, arguments);
     }
-  });
+    __extends(Model, Backbone.Model);
+    Model.prototype.idAttribute = "_id";
+    Model.prototype.register_for_changes = function() {
+      return con._changes.add(this);
+    };
+    return Model;
+  })();
 }).call(this);

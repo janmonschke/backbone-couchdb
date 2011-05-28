@@ -99,7 +99,7 @@ $(function(){
 			// Fetch the state of the model from the server.
 			// Used this to test the model sync.
 			$(ev.currentTarget).hide();
-			$(".edit_content", ev.currentTarget.parent).show().focus();
+			this.$(".edit_content", ev.currentTarget).show().focus();
 		},
 		
 		updateMe : function(ev){
@@ -107,7 +107,7 @@ $(function(){
 		  this.model.set({"text" : input.val() });
 		  this.model.save();
 		  input.hide();
-		  $(".text_content", ev.currentTarget.parent).show();
+		  this.$(".text_content", ev.currentTarget.parent).show();
 		},
 		
 		render : function(){ 

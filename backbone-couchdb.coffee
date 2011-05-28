@@ -34,33 +34,6 @@ Backbone.couch_connector = con =
       if con.config.base_url?
         db.uri = "#{con.config.base_url}/#{con.config.db_name}/";
       db
-  
-  _changes : 
-    registered_collections : []
-    registered_models : []
-    handler : null
-    _update_seq : null
-    add : (coll) ->
-      @registered_collections.push coll if @registered_collections.indexOf coll == -1
-      @activate_changes() unless @handler?
-
-    activate_changes : ->
-      db = con.helpers.make_db()
-      if _update_seq?
-        @listen(db)
-      else
-        @prepare(db)
-    
-    prepare : (db) ->
-      db.info
-        success : (data) =>
-          @_update_seq = data.update_seq || 0
-          @listen db
-
-    listen : (db) ->
-      @handler = db.changes @_update_seq
-      @handler.onChange (changes) =>
-        console.log "change", changes
       
   read : (model, opts) ->
     if model.models 
@@ -75,11 +48,11 @@ Backbone.couch_connector = con =
     _view = @config.view_name
     keys = [@helpers.extract_collection_name coll]
     if coll.db?
-      @_changes.add coll if coll.db.changes or @config.global_changes
+      coll.listen_to_changes() if coll.db.changes or @config.global_changes
       if coll.db.view?
         _view = coll.db.view
         keys = coll.db.keys ? null
-    console.log "read coll", _view, keys
+
     @helpers.make_db().view "#{@config.ddoc_name}/#{_view}",
       keys : keys
       success : (data) =>
@@ -134,11 +107,39 @@ Backbone.sync = (method, model, opts) ->
     when "update" then con.update model, opts
     when "delete" then con.del model, opts
       
-_.extend Backbone.Collection.prototype, 
-  register_for_changes : ->
-    con._changes.add @
+class Backbone.Collection extends Backbone.Collection
+  initialize : ->
+    @listen_to_changes() if !@_db_changes_enabled && @db.changes == true
 
-_.extend Backbone.Model.prototype,
+  listen_to_changes : ->
+    unless @_db_changes_enabled # don't enable changes feed a second time
+      @_db_changes_enabled = true
+      @_db_inst = con.helpers.make_db() unless @_db_inst
+      @_db_inst.info
+        "success" : @_db_prepared_for_changes
+
+  _db_prepared_for_changes : (data) =>
+    @_db_update_seq = data.update_seq || 0
+    opts = 
+      include_docs : true
+      collection : con.helpers.extract_collection_name(@)
+      filter : "#{con.config.ddoc_name}/by_collection"
+    _.extend opts, @db
+    _.defer => @_db_inst.changes(@_db_update_seq, opts).onChange @._db_on_change
+    
+  _db_on_change : (changes) =>
+    for _doc in changes.results
+      obj = @get _doc.id
+      if obj? # test if collection contains the doc, if not, we add it to the collection
+        if _doc.deleted # remove from collection if doc has been deleted on the server
+          @remove obj 
+        else
+          obj.set _doc.doc unless obj.get("_rev") == _doc.doc._rev # set new values if _revs are not the same
+      else
+        @add _doc.doc if !_doc.deleted
+      
+
+class Backbone.Model extends Backbone.Model
   # change the idAttribute since CouchDB uses _id
   idAttribute : "_id"
   register_for_changes : ->
