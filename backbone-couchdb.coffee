@@ -8,7 +8,7 @@ Backbone.couch_connector = con =
     db_name : "backbone_connect"
     ddoc_name : "backbone_example"
     view_name : "byCollection"
-    global_changes : true
+    global_changes : false
     base_url : null
   
   helpers : 
@@ -99,8 +99,6 @@ Backbone.couch_connector = con =
           opts.error()
 
 Backbone.sync = (method, model, opts) ->
-  console.log "sync", arguments
-  
   switch method
     when "read" then con.read model, opts
     when "create" then con.create model, opts
@@ -109,7 +107,7 @@ Backbone.sync = (method, model, opts) ->
       
 class Backbone.Collection extends Backbone.Collection
   initialize : ->
-    @listen_to_changes() if !@_db_changes_enabled && @db.changes == true
+    @listen_to_changes() if !@_db_changes_enabled && (@db.changes or con.config.global_changes)
 
   listen_to_changes : ->
     unless @_db_changes_enabled # don't enable changes feed a second time
@@ -119,7 +117,10 @@ class Backbone.Collection extends Backbone.Collection
         "success" : @_db_prepared_for_changes
 
   stop_changes : ->
-    @_db_changes_handler.stop() if @_db_changes_handler?
+    @_db_changes_enabled = false
+    if @_db_changes_handler?
+      @_db_changes_handler.stop()
+      @_db_changes_handler = null
 
   _db_prepared_for_changes : (data) =>
     @_db_update_seq = data.update_seq || 0
