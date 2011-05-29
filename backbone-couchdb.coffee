@@ -118,6 +118,9 @@ class Backbone.Collection extends Backbone.Collection
       @_db_inst.info
         "success" : @_db_prepared_for_changes
 
+  stop_changes : ->
+    @_db_changes_handler.stop() if @_db_changes_handler?
+
   _db_prepared_for_changes : (data) =>
     @_db_update_seq = data.update_seq || 0
     opts = 
@@ -125,7 +128,9 @@ class Backbone.Collection extends Backbone.Collection
       collection : con.helpers.extract_collection_name(@)
       filter : "#{con.config.ddoc_name}/by_collection"
     _.extend opts, @db
-    _.defer => @_db_inst.changes(@_db_update_seq, opts).onChange @._db_on_change
+    _.defer => 
+      @_db_changes_handler = @_db_inst.changes(@_db_update_seq, opts)
+      @_db_changes_handler.onChange @._db_on_change
     
   _db_on_change : (changes) =>
     for _doc in changes.results
