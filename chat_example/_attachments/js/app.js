@@ -3,7 +3,6 @@ $(function(){
 	// `ddocName` is the name of your couchapp project.
 	Backbone.couch_connector.config.db_name = "backbone_connect";
 	Backbone.couch_connector.config.ddoc_name = "backbone_example";
-	Backbone.couch_connector.config.global_changes = "byCollection";
 	// If set to true, the connector will listen to the changes feed
 	// and will provide your models with real time remote updates.
 	//Backbone.couchConnector.enableChanges = true;
@@ -57,22 +56,13 @@ $(function(){
 	var PrivateMessageList = Backbone.Collection.extend({
 	  db : {
 	    view : "none__",
-	    changes : true,
+	    changes : false,
 	    filter : Backbone.couch_connector.config.ddoc_name + "/private_messages"
 	  },
 	  
 	  url : "/private_messages",
 	  
-	  model : PrivateMessage,
-	  
-	  initialize : function(){
-	    this.listen_to_changes();
-	    that = this;
-	    CurrentUser.bind("change:name", function(){
-	      that.stop_changes();
-	      that.listen_to_changes();
-	    });
-	  }
+	  model : PrivateMessage
 	});
 	
 	var PrivateMessages = new PrivateMessageList();
@@ -83,11 +73,12 @@ $(function(){
 	  regex : /@(\w+)/,
 	  
 	  events : {
-	    "click #send" : "onSubmit"
+	    "click #send" : "onSubmit",
+	    "keypress #message" : "keypress"
 	  },
 	  
 	  initialize : function(){
-	    _.bindAll(this, "onSubmit", "nameChanged");
+	    _.bindAll(this, "onSubmit", "nameChanged", "keypress");
 	    CurrentUser.bind("change:name", this.nameChanged);
 	  },
 	  
@@ -113,8 +104,12 @@ $(function(){
 	  },
 	  
 	  nameChanged : function(){
-	    console.log("name changed");
 	    $('#name').text(CurrentUser.get('name'));
+	  },
+	  
+	  keypress : function(ev){
+	    if(ev.keyCode == 13)
+	      this.onSubmit();
 	  }
 	});
 	
@@ -187,20 +182,20 @@ $(function(){
 		}
 	});
 	
-//new EditView();
-//new CommentsTable();
-$('#login').couchLogin({
-  loggedIn : function(user){
-    console.log("loggedn in", user)
-    CurrentUser.set(user);
-  },
-  loggedOut : function(){
-    CurrentUser.set(new UserModel().toJSON());
-    CurrentUser.trigger("change:name");
-  }
-});
-  new InputView();
-  new MessagesTable();
-  new App();
-
+  _.defer(function(){
+    $('#login').couchLogin({
+      loggedIn : function(user){
+        CurrentUser.set(user);
+        PrivateMessages.listen_to_changes();
+      },
+      loggedOut : function(){
+        PrivateMessages.stop_changes();
+        CurrentUser.set(new UserModel().toJSON());
+        CurrentUser.trigger("change:name");
+      }
+    });
+    new InputView();
+    new MessagesTable();
+    new App();
+  });
 });

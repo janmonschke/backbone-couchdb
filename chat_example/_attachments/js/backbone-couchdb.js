@@ -16,7 +16,7 @@
       db_name: "backbone_connect",
       ddoc_name: "backbone_example",
       view_name: "byCollection",
-      global_changes: true,
+      global_changes: false,
       base_url: null
     },
     helpers: {
@@ -142,7 +142,6 @@
     }
   };
   Backbone.sync = function(method, model, opts) {
-    console.log("sync", arguments);
     switch (method) {
       case "read":
         return con.read(model, opts);
@@ -161,7 +160,7 @@
     }
     __extends(Collection, Backbone.Collection);
     Collection.prototype.initialize = function() {
-      if (!this._db_changes_enabled && this.db.changes === true) {
+      if (!this._db_changes_enabled && (this.db.changes || con.config.global_changes)) {
         return this.listen_to_changes();
       }
     };
@@ -177,8 +176,10 @@
       }
     };
     Collection.prototype.stop_changes = function() {
+      this._db_changes_enabled = false;
       if (this._db_changes_handler != null) {
-        return this._db_changes_handler.stop();
+        this._db_changes_handler.stop();
+        return this._db_changes_handler = null;
       }
     };
     Collection.prototype._db_prepared_for_changes = function(data) {
