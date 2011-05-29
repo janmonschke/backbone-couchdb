@@ -110,12 +110,16 @@ $(function(){
 	  keypress : function(ev){
 	    if(ev.keyCode == 13)
 	      this.onSubmit();
+	  },
+	  
+	  fillAndFocus : function(text){
+	    $('#message').val(text).focus();
 	  }
 	});
 	
 	// Represents an comment entry
 	var EntryView = Backbone.View.extend({
-		tagName : "tr",
+		tagName : "li",
 		
 		template : _.template($("#entry-template").html()),
 		
@@ -134,11 +138,12 @@ $(function(){
 	});
 	
 	var PrivateEntryView = EntryView.extend({
+	  className : "private",
 	  template : _.template($("#private-entry-template").html())
 	});
 	
 	// The view for all comments
-	var MessagesTable = Backbone.View.extend({
+	var MessagesList = Backbone.View.extend({
 		el: $("#messages"),
 		
 		initialize : function(){
@@ -174,28 +179,112 @@ $(function(){
 		
 	});
 	
+	var UserSession = Backbone.Model.extend({
+	});
+	
+	var UserListCollection = Backbone.Collection.extend({
+	  db : {
+	    changes : true
+	  },
+	  url : "/user_list",
+	  model : UserSession
+	});
+	
+	var UserList = new UserListCollection();
+	
+	var UserListEntry = Backbone.View.extend({
+	  tagName : "li",
+	  className : "user",
+	  
+	  
+	  initialize : function(){
+	    _.bindAll(this, 'remove_me');
+	    
+	    this.model.bind("remove", this.remove_me)
+	  },
+	  
+	  render : function(){
+	    this.el = $(this.el);
+	    this.el.html("");
+	    this.el.unbind();
+	    this.el.text(this.model.get("name"));
+	    var temp = "@" + this.model.get("name") + " ";
+	    this.el.click(function(){
+	      Input.fillAndFocus(temp);
+	    });
+	    return this.el;
+	  },
+	  
+	  remove_me : function(){
+	    console.log("remove model", this.model);
+	    that = this;
+	    this.el.fadeOut(function(){
+	      that.el.remove();
+	    })
+	  }
+	});
+	
+	var UserListView = Backbone.View.extend({
+	  el : $('#userlist'),
+	  
+	  initialize : function(){
+	    _.bindAll(this, 'refreshed', 'addRow');
+	    UserList.bind("add", this.addRow);
+	    UserList.bind("refresh", this.refreshed);
+	  },
+	  
+	  addRow : function(model){
+	    console.log("added");
+	    this.el.append(new UserListEntry({model:model}).render());
+	  },
+	  
+	  refreshed : function(){
+	    console.log("refreshed");
+	    UserList.each(this.addRow);
+	  }
+	});
+	
+	var UserList = new UserListCollection();
+	
 	// The App controller initializes the app by calling `Comments.fetch()`
 	var App = Backbone.Controller.extend({
 		initialize : function(){
-			//Comments.fetch();
+			UserList.fetch();
 			//Comments.register_for_changes();
 		}
 	});
 	
+	var CurrentSession = null;
+	var Input = new InputView();
   _.defer(function(){
+    $(window).unload(function(){
+      $.ajaxSetup({
+        async : false
+      });
+      if(CurrentSession != null)
+        CurrentSession.destroy();
+    });
     $('#login').couchLogin({
       loggedIn : function(user){
         CurrentUser.set(user);
         PrivateMessages.listen_to_changes();
+        CurrentSession = UserList.create({
+          "name" : CurrentUser.get("name"),
+          "logged_in_at" : new Date().getTime()
+        });
       },
       loggedOut : function(){
         PrivateMessages.stop_changes();
         CurrentUser.set(new UserModel().toJSON());
         CurrentUser.trigger("change:name");
+        console.log("session", CurrentSession);
+        if(CurrentSession != null)
+          CurrentSession.destroy();
       }
     });
-    new InputView();
-    new MessagesTable();
+    
+    new MessagesList();
+    new UserListView();
     new App();
   });
 });

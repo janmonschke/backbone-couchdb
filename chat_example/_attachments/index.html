@@ -7,23 +7,28 @@
   <body>
     
     <p id="login"></p>
-    <table id="messages">
-    </table>
+    
+    <div id="content">
+      <ul id="userlist">
+      </ul>
+      <ul id="messages">
+      </ul>
+    </div>
     
     
     
     <div id="input">
         <label for="name">Name: </label><span id="name"></span>
         <label for="message">Message: </label><input type="text" id="message" /></input>
-        <input type="submit" id="send" />
+        <input type="submit" id="send" value="Send"/>
     </div>
 
     <script type="text/template" id="entry-template">
-        <td ><span class="from_content">{{from}}: </span><span class="text_content">{{message}}</span></td>
+        <span class="from_content">{{from}}: </span><span class="text_content">{{message}}</span>
     </script>
 
     <script type="text/template" id="private-entry-template">
-        <td ><span class="from_content">{{from}} to {{to}}: </span><span class="text_content">{{message}}</span></td>
+        <span class="from_content">{{from}} to {{to}}: </span><span class="text_content">{{message}}</span>
     </script>
   </body>
   <!-- <script type="text/javascript" src="/_utils/script/jquery.js"></script> -->

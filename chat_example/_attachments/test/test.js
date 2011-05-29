@@ -65,6 +65,8 @@ module("db relevant", {
     
     db = $.couch.db("backbone_test_db")
     db.create({
+      username: "jan",
+      password: "123456",
       success : function(){
         var ddoc = {
            "_id": "_design/backbone_connector_test",

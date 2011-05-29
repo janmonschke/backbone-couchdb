@@ -70,24 +70,48 @@ div.avatar img {
   height : 40px;
 }
 
-#items ul {
-  list-style: none;
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
 }
 
-td.delete {
-	padding: .25em;
-	background-color: #ff0000;
-	color: #fff;
-	opacity: .1;
+ul#messages {
+  width: 80%;
 }
 
-td.delete:hover{
-	opacity: .9;
-	cursor: pointer;
+ul#userlist {
+  float: right;
+  width: 20%;
+  background: #ff00ff;
+}
+
+li {
+  padding: 3px 3px;
+}
+
+li.private{
+  background: #ccc;
+}
+
+li.user {
+  cursor: pointer;
 }
 
 #input{
   position: fixed;
   bottom: 0;
   left: 0;
+  padding: 10px;
+  background: #aaa;
+  width: 100%;
+}
+
+#name {
+  margin-right: 15px;
+}
+
+#message {
+  width: 200px;
+  height: 1.5em;
 }
