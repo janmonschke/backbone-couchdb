@@ -226,17 +226,17 @@ Backbone.couchConnector = {
 };
 
 // Override the standard sync method.
-Backbone.sync = function(method, model, options) {
+Backbone.sync = function(method, model, success, error) {
 	if(method == "create" || method == "update"){
-		Backbone.couchConnector.create(model, options.success, options.error);
+		Backbone.couchConnector.create(model, success, error);
 	}else if(method == "read"){
 		// Decide whether to read a whole collection or just one specific model
 		if(model.collection)
-			Backbone.couchConnector.readModel(model, options.success, options.error);
+			Backbone.couchConnector.readModel(model, success, error);
 		else
-			Backbone.couchConnector.readCollection(model, options.success, options.error);
+			Backbone.couchConnector.readCollection(model, success, error);
 	}else if(method == "delete"){
-		Backbone.couchConnector.del(model, options.success, options.error);
+		Backbone.couchConnector.del(model, success, error);
 	}
 	
 	// Activate real time changes feed
