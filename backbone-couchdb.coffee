@@ -1,17 +1,20 @@
-###
-(c) 2011 Jan Monschke
-backbone-couchdb.js is licensed under the MIT license.
-###
+# (c) 2011 Jan Monschke
+# backbone-couchdb.js is licensed under the MIT license.
 
 Backbone.couch_connector = con =
+  # some default config values for the database connections
   config : 
     db_name : "backbone_connect"
     ddoc_name : "backbone_example"
     view_name : "byCollection"
+    # if true, all Collections will have the _changes feed enabled
     global_changes : false
+    # change the databse base_url to be able to fetch from a remote couchdb
     base_url : null
   
+  # some helper methods for the connector
   helpers : 
+    # returns a string representing the collection (needed for the "collection"-field)
     extract_collection_name : (model) ->
       throw new Error("No model has been passed") unless model?
       return "" unless ((model.collection? and model.collection.url?) or model.url?)
@@ -19,7 +22,7 @@ Backbone.couch_connector = con =
         _name = if _.isFunction(model.url) then model.url() else model.url
       else
         _name = if _.isFunction(model.collection.url) then model.collection.url() else model.collection.url
-      
+      # remove the / at the beginning
       _name = _name.slice(1, _name.length) if _name[0] == "/"
       
       # jquery.couch.js adds the id itself, so we delete the id if it is in the url.
@@ -28,22 +31,22 @@ Backbone.couch_connector = con =
       _name = if _splitted.length > 0 then _splitted[0] else _name
       _name = _name.replace "/", ""
       _name
-  
+    
+    # creates a database instance from the 
     make_db : ->
       db = $.couch.db con.config.db_name
       if con.config.base_url?
         db.uri = "#{con.config.base_url}/#{con.config.db_name}/";
       db
       
+  # calls either the read method for collecions or models
   read : (model, opts) ->
     if model.models 
       con.read_collection model, opts 
     else
       con.read_model model, opts
 
-  ###
-  Reads all docs of a collection based on the byCollection view or a custom view specified by the collection
-  ###
+  # Reads all docs of a collection based on the byCollection view or a custom view specified by the collection
   read_collection : (coll, opts) ->
     _view = @config.view_name
     keys = [@helpers.extract_collection_name coll]
@@ -63,14 +66,16 @@ Backbone.couch_connector = con =
       error : ->
         opts.error()
 
+  # Reads a model from the couchdb by it's ID ###
   read_model : (model, opts) ->
-    throw new Error("The model has no id property, so I can't fetch it from the db") unless model.id
+    throw new Error("The model has no id property, so it can't get fetched from the database") unless model.id
     @helpers.make_db().openDoc model.id,
       success : (doc) -> 
         opts.success(doc)
       error : ->
         opts.error()
   
+  # Creates a model in the couchdb ###
   create : (model, opts) ->
     vals = model.toJSON()
     coll = @helpers.extract_collection_name model
@@ -83,10 +88,11 @@ Backbone.couch_connector = con =
       error : ->
         opts.error()
 
-  ### jquery.couch.js uses the same method for updating as it uses for creating a document, so we can use the `create` method here. ###
+  # jquery.couch.js uses the same method for updating as it uses for creating a document, so we can use the `create` method here. ###
   update : (model, opts) ->
     @create(model, opts)
 
+  # Deletes a model from the server ###
   del : (model, opts) ->
     @helpers.make_db().removeDoc model.toJSON(),
       success : ->
@@ -98,13 +104,15 @@ Backbone.couch_connector = con =
         else
           opts.error()
 
+# Overriding the sync method here to make the connector work ###
 Backbone.sync = (method, model, opts) ->
   switch method
     when "read" then con.read model, opts
     when "create" then con.create model, opts
     when "update" then con.update model, opts
     when "delete" then con.del model, opts
-      
+
+# Adds some more methods to Collections that are needed for the connector ###
 class Backbone.Collection extends Backbone.Collection
   initialize : ->
     @listen_to_changes() if !@_db_changes_enabled && (@db.changes or con.config.global_changes)
@@ -148,5 +156,3 @@ class Backbone.Collection extends Backbone.Collection
 class Backbone.Model extends Backbone.Model
   # change the idAttribute since CouchDB uses _id
   idAttribute : "_id"
-  register_for_changes : ->
-    con._changes.add @

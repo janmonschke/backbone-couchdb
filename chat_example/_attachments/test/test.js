@@ -62,7 +62,6 @@ test("creates a proper db object", function(){
 module("db relevant", {
   setup : function(){
     stop();
-    
     db = $.couch.db("backbone_test_db")
     db.create({
       username: "jan",
