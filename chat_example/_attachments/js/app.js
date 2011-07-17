@@ -4,7 +4,7 @@
 $(function(){
   // Fill this with your database information.
   // `ddocName` is the name of your couchapp project.
-  Backbone.couch_connector.config.db_name = "backbone_connect";
+  Backbone.couch_connector.config.db_name = "backbone-couchapp";
   Backbone.couch_connector.config.ddoc_name = "backbone_example";
   
   // If set to true, the connector will listen to the changes feed

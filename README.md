@@ -1,7 +1,7 @@
 backbone-couchdb
 ================
 
-This is a Backbone.js connector that overrides the default sync-behavior Backbone and connects your app to your [CouchDB](https://github.com/apache/couchdb) so that you can [RELAX](http://vimeo.com/11852209) and don't need to worry about server-side code. 
+This is a Backbone.js connector that overrides Backbone's default sync-behavior and connects your app to your [CouchDB](https://github.com/apache/couchdb) so that you can [RELAX](http://vimeo.com/11852209) and don't need to worry about server-side code. 
 
 Why a new connector?
 --------------------
@@ -18,9 +18,9 @@ Getting Started
 
 All Backbone apps should work normally without any changes. Simply include `backbone-couchdb.js` with its dependencies into your project and configure the connector with your database infos.
 
-  Backbone.couch_connector.config.db_name = "backbone-couchapp";
-  Backbone.couch_connector.config.ddoc_name = "backbone-couchapp";
-  Backbone.couch_connector.config.global_changes = false;
+    Backbone.couch_connector.config.db_name = "backbone-couchapp";
+    Backbone.couch_connector.config.ddoc_name = "backbone-couchapp";
+    Backbone.couch_connector.config.global_changes = false;
 	
 As you can see you also need to create a new database in your CouchDB and a new design document that contains the following view:
 
@@ -30,15 +30,15 @@ As you can see you also need to create a new database in your CouchDB and a new 
         }
     }
 
-If you set `Backbone.couchConnector.enableChanges` to true, the connector will update your models with remote changes in near real time.
+If you set `Backbone.couch_connector.config.global_changes` to true, the connector will automatically update your models with remote changes in near real time.
 
 Give your [couchapp](https://github.com/couchapp/couchapp) some backbone
 ------------------------------------------------------------------------
 
-An easy way to host single-page apps is to enclose them in a couchapp. I included a sample couchapp project (`chat_example`) to show you how to create 
-couchapps with backbone and this CouchDB connector. You can also use it as a bare couchapp directory structure for new projects.
+An easy way to host single-page apps is to enclose them in a couchapp. I included a sample couchapp project (`/chat_example`) to show you how to create 
+couchapps with Backbone and this CouchDB connector. You can also use it as a bare couchapp directory structure for new projects.
 
-There is an instance of this couchapp running on [couchone](http://backbone.couchone.com/backbone-couchapp/_design/backbone-couchapp/index.html) and I uploaded a file with the [annotated source](http://janmonschke.github.com/backbone-couchdb/app.html) of the app. (Created with [docco](https://github.com/jashkenas/docco))
+There is an instance of this couchapp running on [http://www.iriscouch.com/](http://backbone.couchone.com/backbone-couchapp/_design/backbone-couchapp/index.html) and I uploaded a file with the [annotated source](http://janmonschke.github.com/backbone-couchdb/app.html) of the app. (Created with [docco](https://github.com/jashkenas/docco))
 
 Dependencies (already included in the chat example)
 ------------
