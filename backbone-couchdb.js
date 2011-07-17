@@ -1,246 +1,213 @@
-// (c) 2011 Jan Monschke
-// backbone-couchdb.js is licensed under the MIT license.
-// I developed this connector because I didn't want to write an own server that persists 
-// the models that Backbone.js ceated. Instead I now only have to write a simple design document 
-// containing one simple view and I'm done with server-side code. 
-// So have fun reading the doc and [RELAX](http://vimeo.com/11852209) :D
-
-// I added the connector to the Backbone object.
-Backbone.couchConnector = {
-	// Name of the Database.
-	databaseName : "test1",
-	// Name of the design document that contains the views.
-	ddocName : "backbone",
-	// Name of the view.
-	viewName : "byCollection",
-	// Enable updates via the couchdb _changes feed
-	enableChanges : false,
-	// If `baseUrl` is set, the default uri of jquery.couch.js will be overridden.
-	// This is useful if you want to access a couch on another server e.g. `http://127.0.0.1:5984`
-	// Important: Be aware of the Cross-Origin Policy. 
-	baseUrl : null,
-	// A simple lookup table for collections that should be synched.
-	_watchList : [],
-	getCollectionFromModel : function(model){
-		// I would like to use the Backbone `getUrl()` helper here but it's not in my scope.
-		if (!(model && model.url)) 
-			throw new Error("No url property/function!");
-		var collectionName = _.isFunction(model.url) ? model.url() : model.url;
-		collectionName = collectionName.replace("/","");
-		var split = collectionName.split("/");
-		// jquery.couch.js adds the id itself, so we delete the id if it is in the url.
-		// "collection/:id" -> "collection"
-		if(split.length > 1){
-			collectionName = split[0];
-		}
-		return collectionName;
-	},
-	// Creates a couchDB object from the given model object.
-	makeDb : function(model){
-		var db = $.couch.db(this.databaseName);
-		if(this.baseUrl){
-			db.uri = this.baseUrl + "/" + this.databaseName + "/";
-		}
-		return db;
-	},
-	// Fetches all docs from the given collection.
-	// Therefore all docs from the view `ddocName`/`viewName` will be requested.
-	// A simple view could look like this:
-	//
-	//    function(doc) {
-	//        if(doc.collection) 
-	//            emit(doc.collection, doc);
-	//    }
-	//
-	// doc.collection represents the url property of the collection and is automatically added to the model.
-	readCollection : function(coll, _success, _error){
-		var db = this.makeDb(coll);
-		var collection = this.getCollectionFromModel(coll);
-		var query = this.ddocName + "/" + this.viewName;
-		// Query equals ddocName/viewName 
-		db.view(query,{
-			// Only return docs that have this collection's name as key.
-			keys : [collection],
-			success:function(result){
-				if(result.rows.length > 0){
-					var arr = [];
-					var model = {};
-					var curr = {};
-					// Prepare the result set for Backbone -> Only return the docs and no meta data.
-					for (var i=0; i < result.rows.length; i++) {
-						curr = result.rows[i];
-						model = curr.value;
-						if(!model.id)
-							model.id = curr.id;
-						arr.push(model);
-					}
-					_success(arr);
-				}else{
-					_success(null);
-				}
-			},
-			error: _error
-		});
-		// Add the collection to the `_watchlist`.
-		if(!this._watchList[collection]){
-			this._watchList[collection] = coll;			
-		}
-
-	},
-	// Reads the state of one specific model from the server.
-	readModel : function(model, _success, _error){
-		var db = this.makeDb(model);
-		db.openDoc(model.id,{
-			success : function(doc){
-				_success(doc);
-			},
-			error : _error
-		});
-	},
-	// Creates a document.
-	create : function(model, _success, _error){
-		var db = this.makeDb(model);
-		var data = model.toJSON();
-		if(!data.collection){
-			data.collection = this.getCollectionFromModel(model);
-		}
-		// Backbone finds out that an element has been
-		// synched by checking for the existance of an `id` property in the model.
-		// By returning the an object with an `id` we mark the model as synched.
-		if(!data.id && data._id){
-			data.id = data._id;
-		}
-		// jquery.couch.js automatically finds out whether the document is new 
-		// or already exists by checking for the _id property.
-		db.saveDoc(data,{
-			success : function(resp){
-				// When the document has been successfully created/altered, return
-				// the created/changed values.
-				_success({
-					"id" : resp.id,
-					"_id" : resp.id,
-					"_rev" : resp.rev
-				});
-			},
-			error : function(nr){
-				// document already exists, we don't care ;)
-				if(nr == 409){
-					_error();
-				}else{
-					_error();
-				}
-			}
-		});
-	},
-	// jquery.couch.js provides the same method for updating and creating a document, 
-	// so we can use the `create` method here.
-	update : function(model, _success, _error){
-		this.create(model, _success, _error);
-	},
-	// Deletes the document via the removeDoc method.
-	del : function(model, _success, _error){
-		var db = this.makeDb(model);
-		var data = model.toJSON();
-		db.removeDoc(data,{
-			success: function(){
-				_success();
-			},
-			error: function(nr,req,e){
-				if(e == "deleted"){
-					console.log("The Doc could not be deleted because it was already deleted from the server.");
-					_success();
-				}else{
-					_error();
-				}
-				
-			}
-		});
-	},
-	// The _changes feed is one of the coolest things about CouchDB in my opinion.
-	// It enables you to get real time updates of changes in your database.
-	// If `enableChanges` is true the connector automatically listens to changes in the database 
-	// and updates the changed models. -> Remotely triggered events in your models and collections. YES!
-	_changes : function(model){
-		var db = this.makeDb(model);
-		var connector = this;
-		// First grab the `update_seq` from the database info, so that we only receive newest changes.
-		db.info({
-			success : function(data){
-				var since = (data.update_seq || 0)
-				// Connect to the changes feed.
-				connector.changesFeed = db.changes(since,{include_docs:true});
-				connector.changesFeed.onChange(function(changes){
-					var doc,coll,model,ID;
-					// Iterate over the changed docs and validate them.
-					for (var i=0; i < changes.results.length; i++) {
-						doc = changes.results[i].doc;
-						if(doc.collection){
-							coll = connector._watchList[doc.collection];
-							if(coll){
-								ID = (doc.id || doc._id);
-								model = coll.get(ID);
-								if(model){
-									// Check if the model on this client has changed by comparing `rev`.
-									if(doc._rev != model.get("_rev")){
-										// `doc._rev` is newer than the `rev` attribute of the model, so we update it.
-										// Currently all properties are updated, will maybe diff in the future.
-										model.set(doc);
-									}
-								}else{
-									// Create a new element, set its id and add it to the collection.
-									if(!doc.id)
-										doc.id = doc._id;
-									coll.add(doc);
-								}
-							}
-						}else{
-							// The doc has been deleted on the server
-							if(doc._deleted){
-								// Find the doc and the corresponsing collection
-								var dd = connector.findDocAndColl(doc._id);
-								// Only if both are found, remove the doc from the collection
-								if(dd.elem && dd.coll){
-									// will trigger the `remove` event on the collection
-									dd.coll.remove(dd.elem);
-								}
-							}
-						}
-					}
-				});
-			}
-		});
-	},
-	
-	// Finds a document and its collection by the document id
-	findDocAndColl : function(id){
-		var coll,elem;
-		for (coll in this._watchList) {
-			coll = this._watchList[coll];
-			elem = coll.get(id);
-			if(elem){
-				break;
-			}
-		}
-		return { "coll" : coll , "elem" : elem};
-	}
-};
-
-// Override the standard sync method.
-Backbone.sync = function(method, model, options) {
-	if(method == "create" || method == "update"){
-		Backbone.couchConnector.create(model, options.success, options.error);
-	}else if(method == "read"){
-		// Decide whether to read a whole collection or just one specific model
-		if(model.collection)
-			Backbone.couchConnector.readModel(model, options.success, options.error);
-		else
-			Backbone.couchConnector.readCollection(model, options.success, options.error);
-	}else if(method == "delete"){
-		Backbone.couchConnector.del(model, options.success, options.error);
-	}
-	
-	// Activate real time changes feed
-	if(Backbone.couchConnector.enableChanges && !Backbone.couchConnector.changesFeed){
-		Backbone.couchConnector._changes(model);
-	}	
-}
+(function() {
+  var con;
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
+    for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
+    function ctor() { this.constructor = child; }
+    ctor.prototype = parent.prototype;
+    child.prototype = new ctor;
+    child.__super__ = parent.prototype;
+    return child;
+  };
+  Backbone.couch_connector = con = {
+    config: {
+      db_name: "backbone_connect",
+      ddoc_name: "backbone_example",
+      view_name: "byCollection",
+      global_changes: false,
+      base_url: null
+    },
+    helpers: {
+      extract_collection_name: function(model) {
+        var _name, _splitted;
+        if (model == null) {
+          throw new Error("No model has been passed");
+        }
+        if (!(((model.collection != null) && (model.collection.url != null)) || (model.url != null))) {
+          return "";
+        }
+        if (model.url != null) {
+          _name = _.isFunction(model.url) ? model.url() : model.url;
+        } else {
+          _name = _.isFunction(model.collection.url) ? model.collection.url() : model.collection.url;
+        }
+        if (_name[0] === "/") {
+          _name = _name.slice(1, _name.length);
+        }
+        _splitted = _name.split("/");
+        _name = _splitted.length > 0 ? _splitted[0] : _name;
+        _name = _name.replace("/", "");
+        return _name;
+      },
+      make_db: function() {
+        var db;
+        db = $.couch.db(con.config.db_name);
+        if (con.config.base_url != null) {
+          db.uri = "" + con.config.base_url + "/" + con.config.db_name + "/";
+        }
+        return db;
+      }
+    },
+    read: function(model, opts) {
+      if (model.models) {
+        return con.read_collection(model, opts);
+      } else {
+        return con.read_model(model, opts);
+      }
+    },
+    read_collection: function(coll, opts) {
+      var keys, _ref, _view;
+      _view = this.config.view_name;
+      keys = [this.helpers.extract_collection_name(coll)];
+      if (coll.db != null) {
+        if (coll.db.changes || this.config.global_changes) {
+          coll.listen_to_changes();
+        }
+        if (coll.db.view != null) {
+          _view = coll.db.view;
+          keys = (_ref = coll.db.keys) != null ? _ref : null;
+        }
+      }
+      return this.helpers.make_db().view("" + this.config.ddoc_name + "/" + _view, {
+        keys: keys,
+        success: __bind(function(data) {
+          var doc, _i, _len, _ref, _temp;
+          _temp = [];
+          _ref = data.rows;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            doc = _ref[_i];
+            _temp.push(doc.value);
+          }
+          return opts.success(_temp);
+        }, this),
+        error: function() {
+          return opts.error();
+        }
+      });
+    },
+    read_model: function(model, opts) {
+      if (!model.id) {
+        throw new Error("The model has no id property, so it can't get fetched from the database");
+      }
+      return this.helpers.make_db().openDoc(model.id, {
+        success: function(doc) {
+          return opts.success(doc);
+        },
+        error: function() {
+          return opts.error();
+        }
+      });
+    },
+    create: function(model, opts) {
+      var coll, vals;
+      vals = model.toJSON();
+      coll = this.helpers.extract_collection_name(model);
+      if (coll.length > 0) {
+        vals.collection = coll;
+      }
+      return this.helpers.make_db().saveDoc(vals, {
+        success: function(doc) {
+          return opts.success({
+            _id: doc.id,
+            _rev: doc.rev
+          });
+        },
+        error: function() {
+          return opts.error();
+        }
+      });
+    },
+    update: function(model, opts) {
+      return this.create(model, opts);
+    },
+    del: function(model, opts) {
+      return this.helpers.make_db().removeDoc(model.toJSON(), {
+        success: function() {
+          return opts.success();
+        },
+        error: function(nr, req, e) {
+          if (e === "deleted") {
+            return opts.success();
+          } else {
+            return opts.error();
+          }
+        }
+      });
+    }
+  };
+  Backbone.sync = function(method, model, opts) {
+    switch (method) {
+      case "read":
+        return con.read(model, opts);
+      case "create":
+        return con.create(model, opts);
+      case "update":
+        return con.update(model, opts);
+      case "delete":
+        return con.del(model, opts);
+    }
+  };
+  Backbone.Collection = (function() {
+    function Collection() {
+      this._db_on_change = __bind(this._db_on_change, this);;
+      this._db_prepared_for_changes = __bind(this._db_prepared_for_changes, this);;      Collection.__super__.constructor.apply(this, arguments);
+    }
+    __extends(Collection, Backbone.Collection);
+    Collection.prototype.initialize = function() {
+      if (!this._db_changes_enabled && (this.db.changes || con.config.global_changes)) {
+        return this.listen_to_changes();
+      }
+    };
+    Collection.prototype.listen_to_changes = function() {
+      if (!this._db_changes_enabled) {
+        this._db_changes_enabled = true;
+        if (!this._db_inst) {
+          this._db_inst = con.helpers.make_db();
+        }
+        return this._db_inst.info({
+          "success": this._db_prepared_for_changes
+        });
+      }
+    };
+    Collection.prototype.stop_changes = function() {
+      this._db_changes_enabled = false;
+      if (this._db_changes_handler != null) {
+        this._db_changes_handler.stop();
+        return this._db_changes_handler = null;
+      }
+    };
+    Collection.prototype._db_prepared_for_changes = function(data) {
+      var opts;
+      this._db_update_seq = data.update_seq || 0;
+      opts = {
+        include_docs: true,
+        collection: con.helpers.extract_collection_name(this),
+        filter: "" + con.config.ddoc_name + "/by_collection"
+      };
+      _.extend(opts, this.db);
+      return _.defer(__bind(function() {
+        this._db_changes_handler = this._db_inst.changes(this._db_update_seq, opts);
+        return this._db_changes_handler.onChange(this._db_on_change);
+      }, this));
+    };
+    Collection.prototype._db_on_change = function(changes) {
+      var obj, _doc, _i, _len, _ref, _results;
+      _ref = changes.results;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        _doc = _ref[_i];
+        obj = this.get(_doc.id);
+        _results.push(obj != null ? _doc.deleted ? this.remove(obj) : obj.get("_rev") !== _doc.doc._rev ? obj.set(_doc.doc) : void 0 : !_doc.deleted ? this.add(_doc.doc) : void 0);
+      }
+      return _results;
+    };
+    return Collection;
+  })();
+  Backbone.Model = (function() {
+    function Model() {
+      Model.__super__.constructor.apply(this, arguments);
+    }
+    __extends(Model, Backbone.Model);
+    Model.prototype.idAttribute = "_id";
+    return Model;
+  })();
+}).call(this);
