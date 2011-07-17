@@ -1,3 +1,6 @@
+// This is a simple app that demonstrates how to use the Backbone.js couch-connector.
+// It is sort of a real time chat with private messages support.
+
 $(function(){
   // Fill this with your database information.
   // `ddocName` is the name of your couchapp project.
@@ -6,7 +9,8 @@ $(function(){
   
   // If set to true, the connector will listen to the changes feed
   // and will provide your models with real time remote updates.
-  //Backbone.couchConnector.enableChanges = true;
+  // But in this case we enable the changes feed for each Collection on our own.
+  Backbone.couch_connector.config.global_changes = false;
   
   // Enables Mustache.js-like templating.
   _.templateSettings = {
@@ -60,8 +64,9 @@ $(function(){
       view : "none__",
       changes : false,
       // The filter avoids that private messages appear in the public stream.
-      // If you don't know what filters are in CouchDB, then read it up here: http://guide.couchdb.org/draft/notifications.html#filters
-      // Look up how the filter works in chat_example/filters/private_messages.js.
+      // If you don't know what filters are in CouchDB, then read it up here:
+      // <a href="http://guide.couchdb.org/draft/notifications.html#filters">http://guide.couchdb.org/draft/notifications.html#filters</a>
+      // Look up how the filter works in `chat_example/filters/private_messages.js`.
       filter : Backbone.couch_connector.config.ddoc_name + "/private_messages"
     },
     
@@ -155,9 +160,9 @@ $(function(){
     el: $("#messages"),
   
     initialize : function(){
-      _.bindAll(this, 'refreshed', 'addRow', 'addPrivateRow');
+      _.bindAll(this, 'reseted', 'addRow', 'addPrivateRow');
     
-      Messages.bind("refresh", this.refreshed);
+      Messages.bind("reset", this.reseted);
       Messages.bind("add", this.addRow);
       PrivateMessages.bind("add", this.addPrivateRow);
     },
@@ -176,7 +181,7 @@ $(function(){
     },
   
     // Renders all comments into the table
-    refreshed : function(){
+    reseted : function(){
       // reset the table
       this.el.html("");
       if(Messages.length > 0){
@@ -207,7 +212,7 @@ $(function(){
     initialize : function(){
       _.bindAll(this, 'remove_me');
       
-      // when the session gets destroyed, the row will be destroyed too
+      // When the session gets destroyed, the row will be destroyed too
       this.model.bind("remove", this.remove_me)
     },
   
@@ -216,7 +221,7 @@ $(function(){
       this.el.html("");
       this.el.unbind();
       this.el.text(this.model.get("name"));
-      // insert @username into the input field
+      // Insert "@username" into the input field
       var temp = "@" + this.model.get("name") + " ";
       this.el.click(function(){
         Input.fillAndFocus(temp);
@@ -237,27 +242,28 @@ $(function(){
     el : $('#userlist'),
   
     initialize : function(){
-      _.bindAll(this, 'refreshed', 'addRow');
+      _.bindAll(this, 'reseted', 'addRow');
       
-      // the view listens to the realtime updates of the couchdb changes feed
+      // The view listens to the realtime updates of the couchdb changes feed
       UserList.bind("add", this.addRow);
-      UserList.bind("refresh", this.refreshed);
+      UserList.bind("reset", this.reseted);
     },
   
     addRow : function(model){
       this.el.append(new UserListEntry({model:model}).render());
     },
   
-    refreshed : function(){
+    reseted : function(){
       UserList.each(this.addRow);
     }
   });
 
   var UserList = new UserListCollection();
 
-  // The App controller initializes the app by calling `UserList.fetch()`
-  var App = Backbone.Controller.extend({
+  // The App router initializes the app by calling `UserList.fetch()`
+  var App = Backbone.Router.extend({
     initialize : function(){
+      console.log("start");
       UserList.fetch();
     }
   });
@@ -270,7 +276,7 @@ $(function(){
   // Booststrap app after delay to avoid continuous activity spinner 
   _.delay(function(){
     
-    // destroy the current session on unload
+    // Destroy the current session on unload
     $(window).unload(function(){
       $.ajaxSetup({
         async : false
@@ -279,15 +285,19 @@ $(function(){
         CurrentSession.destroy();
     });
     
-    // includes the couchlogin
+    // Includes the couchlogin
+    // check it out here: <a href="https://github.com/couchapp/couchdb-login-jquery">https://github.com/couchapp/couchdb-login-jquery</a>
     $('#login').couchLogin({
       loggedIn : function(user){
         CurrentUser.set(user);
         PrivateMessages.listen_to_changes();
-        CurrentSession = UserList.create({
-          "name" : CurrentUser.get("name"),
-          "logged_in_at" : new Date().getTime()
-        });
+        // Only add a User if it's not already in the list
+        if(!UserList.detect(function(user){return user.get("name") == CurrentUser.get("name");})){
+          CurrentSession = UserList.create({
+            "name" : CurrentUser.get("name"),
+            "logged_in_at" : new Date().getTime()
+          });
+        }
       },
       loggedOut : function(){
         PrivateMessages.stop_changes();
@@ -298,7 +308,7 @@ $(function(){
       }
     });
     
-    // bootstrapping
+    // Bootstrapping
     new MessagesList();
     new UserListView();
     new App();

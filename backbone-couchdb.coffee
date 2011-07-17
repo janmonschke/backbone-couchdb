@@ -66,7 +66,7 @@ Backbone.couch_connector = con =
       error : ->
         opts.error()
 
-  # Reads a model from the couchdb by it's ID ###
+  # Reads a model from the couchdb by it's ID 
   read_model : (model, opts) ->
     throw new Error("The model has no id property, so it can't get fetched from the database") unless model.id
     @helpers.make_db().openDoc model.id,
@@ -75,7 +75,7 @@ Backbone.couch_connector = con =
       error : ->
         opts.error()
   
-  # Creates a model in the couchdb ###
+  # Creates a model in the db
   create : (model, opts) ->
     vals = model.toJSON()
     coll = @helpers.extract_collection_name model
@@ -92,7 +92,7 @@ Backbone.couch_connector = con =
   update : (model, opts) ->
     @create(model, opts)
 
-  # Deletes a model from the server ###
+  # Deletes a model from the db
   del : (model, opts) ->
     @helpers.make_db().removeDoc model.toJSON(),
       success : ->
@@ -117,13 +117,16 @@ class Backbone.Collection extends Backbone.Collection
   initialize : ->
     @listen_to_changes() if !@_db_changes_enabled && (@db.changes or con.config.global_changes)
 
+  # Manually start listening to real time updates
   listen_to_changes : ->
-    unless @_db_changes_enabled # don't enable changes feed a second time
+    # don't enable changes feed a second time
+    unless @_db_changes_enabled 
       @_db_changes_enabled = true
       @_db_inst = con.helpers.make_db() unless @_db_inst
       @_db_inst.info
         "success" : @_db_prepared_for_changes
 
+  # Stop listening to real time updates
   stop_changes : ->
     @_db_changes_enabled = false
     if @_db_changes_handler?
@@ -144,11 +147,14 @@ class Backbone.Collection extends Backbone.Collection
   _db_on_change : (changes) =>
     for _doc in changes.results
       obj = @get _doc.id
-      if obj? # test if collection contains the doc, if not, we add it to the collection
-        if _doc.deleted # remove from collection if doc has been deleted on the server
+      # test if collection contains the doc, if not, we add it to the collection
+      if obj?
+        # remove from collection if doc has been deleted on the server
+        if _doc.deleted
           @remove obj 
         else
-          obj.set _doc.doc unless obj.get("_rev") == _doc.doc._rev # set new values if _revs are not the same
+          # set new values if _revs are not the same
+          obj.set _doc.doc unless obj.get("_rev") == _doc.doc._rev 
       else
         @add _doc.doc if !_doc.deleted
       
