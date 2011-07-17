@@ -9,33 +9,103 @@
 	
 	<style type="text/css">
 		body {
-  		margin-top: 1.0em;
-  		background-color: #fefefe;
-		  font-family: "Helvetica,Arial,FreeSans";
-  		color: #000000;
-    }
-    #container {
+      font-family: Helvetica, arial, serif;
+      font-size: 14px;
+      background: white;
+      }
+
+    h1 {
+      font-size: 36pt;
+      font-family: "Droid Serif";
+      font-weight: bold;
+      padding: 5px 0px;
+      margin-bottom: 10px; }
+
+    h2 {
+      font-size: 28pt;
+      font-family: "Droid Serif";
+      font-weight: bold;
+      padding: 5px 0px;
+      margin-bottom: 10px; }
+
+    h3 {
+      font-size: 20pt;
+      font-family: "Droid Serif";
+      font-weight: bold;
+      padding: 5px 0px;
+      margin-bottom: 10px; }
+
+    h4 {
+      font-size: 16pt; }
+
+    p {
+      line-height: 1.4;
+      margin: 1em 0em; }
+
+    article {
+      margin: 1em 0em; }
+
+    pre {
+      background: #dddddd;
+      padding: 5px;
+      font-size: 12px;
+      font-family: Monaco, "Courier New", monospace;
+      font-weight: normal;
+      line-height: 1.3;
+      -moz-border-radius: 3px;
+      -webkit-border-radius: 3px;
+      border-radius: 3px; }
+
+    a {
+      text-decoration: none;
+      color: #e58800; }
+
+    a:hover {
+      color: #444444;
+      -moz-transition: color 0.3s linear;
+      -o-transition: color 0.3s linear;
+      -webkit-transition: color 0.3s linear;
+      transition: color 0.3s linear; }
+
+    a.first {
+      margin-left: 15px; }
+
+    img {
+      border-left: 7px solid #e58800;
+      padding: 2px; }
+
+    img:hover {
+      border-left: 7px solid #444444;
+      -moz-transition: border-left 0.3s linear;
+      -o-transition: border-left 0.3s linear;
+      -webkit-transition: border-left 0.3s linear;
+      transition: border-left 0.3s linear; }
+
+    #header {
+      width: 100%;
+      color: #444444;
+      padding: 10px 0px 10px 0px;
+      font-size: 16pt;
+      font-weight: bold;
+      border-bottom: 7px solid #eeeeee; }
+
+    #header a {
+      color: #444444; }
+
+    #header a:hover {
+      color: #e58800; }
+
+    #content {
       margin: 0 auto;
-      width: 700px;
-    }
-		h1 { font-size: 3.8em; color: #010101; margin-bottom: 3px; }
-		h1 .small { font-size: 0.4em; }
-		h2 { font-size: 1.5em; color: #010101; }
-    h3 { text-align: center; color: #010101; }
-    a { color: #010101; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-		pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
+      width: 60%; }
 	</style>
 	
 </head>
 
 <body>
-  <a href="http://github.com/janmonschke/backbone-couchdb"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  <a href="http://github.com/janmonschke/backbone-couchdb"><img style="position: fixed; top: 0; right: 0; border: 0; padding: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" class="nomargin"/></a>
 
-  <div id="container">
+  <div id="content">
 
     <div class="download">
       <a href="http://github.com/janmonschke/backbone-couchdb/zipball/master">
@@ -44,25 +114,13 @@
         <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
     </div>
 
-    <h1><a href="http://github.com/janmonschke/backbone-couchdb">backbone-couchdb</a>
-      <span class="small">by <a href="http://github.com/janmonschke">janmonschke</a>
-           twitter: <a href="http://twitter.com/thedeftone">@thedeftone</a></span></h1>
+    <h2><a href="http://github.com/janmonschke/backbone-couchdb">backbone-couchdb</a>
+      <span class="small">by <a href="http://github.com/janmonschke">janmonschke</a></h2>
 
     <div class="description">
-      A couchdb connector for backbone with support for real time changes. Check out the <a href="backbone-couchdb.html">annotated source</a>
-      and the <a href="http://backbone.couchone.com/backbone-couchapp/_design/backbone-couchapp/index.html">example couchapp</a> (<a href="https://github.com/janmonschke/backbone-couchdb/tree/master/backbone-couchapp/">source</a>, <a href="app.html">annotated source</a>).
+      A CouchDB connector for Backbone.js with support for real time changes. Check out the <a href="backbone-couchdb.html">annotated source</a>
+      and the <a href="http://backbone.iriscouch.com/backbone-couchapp/_design/backbone_example/index.html">example couchapp</a>.
     </div>
-
-    <h2>Dependencies</h2>
-<p>
-    <ul>
-        <li><a href="http://www.jquery.com">jQuery</a></li>
-        <li>jquery.couch.js</li>
-        <li><a href="https://github.com/documentcloud/backbone">Backbone.js</a></li>
-        <li><a href="https://github.com/documentcloud/underscore">Underscore.js</a></li>
-    </ul>
-</p>
-
 
     <h2>Download</h2>
     <p>
