@@ -1,3 +1,6 @@
+[DEMO-APP](http://backbone.iriscouch.com/backbone-couchapp/_design/backbone_example/index.html) - real time chat
+===
+
 backbone-couchdb
 ================
 
