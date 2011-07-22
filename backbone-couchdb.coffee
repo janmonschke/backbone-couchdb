@@ -1,5 +1,8 @@
-# (c) 2011 Jan Monschke
-# backbone-couchdb.js is licensed under the MIT license.
+###
+(c) 2011 Jan Monschke
+v1.0
+backbone-couchdb.js is licensed under the MIT license.
+###
 
 Backbone.couch_connector = con =
   # some default config values for the database connections
