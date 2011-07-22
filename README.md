@@ -1,10 +1,31 @@
-[DEMO-APP](http://backbone.iriscouch.com/backbone-couchapp/_design/backbone_example/index.html) - real time chat
-===
-
 backbone-couchdb
 ================
 
-This is a Backbone.js connector that overrides Backbone's default sync-behavior and connects your app to your [CouchDB](https://github.com/apache/couchdb) so that you can [RELAX](http://vimeo.com/11852209) and don't need to worry about server-side code. 
+This is a Backbone.js connector that overrides Backbone's default sync-behavior and connects your app to your [CouchDB](https://github.com/apache/couchdb) so that you can [RELAX](http://vimeo.com/11852209) and don't need to worry about (real-time) server-side code.
+
+Demos
+-----
+* [Real time chat](http://backbone.iriscouch.com/backbone-couchapp/_design/backbone_example/index.html) with support for private messages. (source in `/chat_example`)
+* [Real time comments](http://backbone.iriscouch.com/backbone-couchapp/_design/backbone_couchapp_comments/index.html). (source in `/comments_example`)
+
+Changelog
+---------
+
+* 1.0
+  * CoffeeScript rewrite
+  * Support for custom filter functions
+  * Chat example (including tests)
+  * Backbone 5.1 support
+  * Various bugfixes
+  * Started versioning ;)
+  
+Dependencies (already included in the examples)
+------------
+
+* [Backbone.js](https://github.com/documentcloud/backbone) (>= 0.5.1)
+* [Underscore.js](https://github.com/documentcloud/underscore)
+* [jquery.couch.js](https://github.com/apache/couchdb/blob/trunk/share/www/script/jquery.couch.js)
+* [jQuery](http://www.jquery.com/)
 
 Why a new connector?
 --------------------
@@ -42,15 +63,6 @@ An easy way to host single-page apps is to enclose them in a couchapp. I include
 couchapps with Backbone and this CouchDB connector. You can also use it as a bare couchapp directory structure for new projects.
 
 There is an instance of this couchapp running on [iriscouch.com (demo)](http://backbone.iriscouch.com/backbone-couchapp/_design/backbone_example/index.html) and I uploaded a file with the [annotated source](http://janmonschke.github.com/backbone-couchdb/app.html) of the app. (Created with [docco](https://github.com/jashkenas/docco))
-
-Dependencies (already included in the chat example)
-------------
-
-* [Backbone.js](https://github.com/documentcloud/backbone) (>= 0.5.1)
-* [Underscore.js](https://github.com/documentcloud/underscore)
-* [jquery.couch.js](https://github.com/apache/couchdb/blob/trunk/share/www/script/jquery.couch.js)
-* [jQuery](http://www.jquery.com/)
-
 
 Learn more
 ----------
