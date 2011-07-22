@@ -115,7 +115,7 @@ Backbone.sync = (method, model, opts) ->
 # Adds some more methods to Collections that are needed for the connector ###
 class Backbone.Collection extends Backbone.Collection
   initialize : ->
-    @listen_to_changes() if !@_db_changes_enabled && (@db.changes or con.config.global_changes)
+    @listen_to_changes() if !@_db_changes_enabled && ((@db and @db.changes) or con.config.global_changes)
 
   # Manually start listening to real time updates
   listen_to_changes : ->

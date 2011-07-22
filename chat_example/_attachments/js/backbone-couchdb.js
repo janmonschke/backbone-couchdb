@@ -153,7 +153,7 @@
     }
     __extends(Collection, Backbone.Collection);
     Collection.prototype.initialize = function() {
-      if (!this._db_changes_enabled && (this.db.changes || con.config.global_changes)) {
+      if (!this._db_changes_enabled && ((this.db && this.db.changes) || con.config.global_changes)) {
         return this.listen_to_changes();
       }
     };
