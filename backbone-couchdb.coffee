@@ -120,7 +120,7 @@ class Backbone.Collection extends Backbone.Collection
   # Manually start listening to real time updates
   listen_to_changes : ->
     # don't enable changes feed a second time
-    unless @_db_changes_enabled 
+    unless @_db_changes_enabled
       @_db_changes_enabled = true
       @_db_inst = con.helpers.make_db() unless @_db_inst
       @_db_inst.info
@@ -151,7 +151,7 @@ class Backbone.Collection extends Backbone.Collection
       if obj?
         # remove from collection if doc has been deleted on the server
         if _doc.deleted
-          @remove obj 
+          @remove obj
         else
           # set new values if _revs are not the same
           obj.set _doc.doc unless obj.get("_rev") == _doc.doc._rev 

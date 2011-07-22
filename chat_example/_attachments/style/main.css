@@ -115,3 +115,15 @@ li.user {
   width: 200px;
   height: 1.5em;
 }
+
+span.delete{
+  opacity: 0;
+  padding: 2px;
+  margin-left: 10px;
+}
+
+span.delete:hover{
+  opacity: 1;
+  color: #ffffff;
+  background: #000000;
+}

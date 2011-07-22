@@ -40,6 +40,10 @@ $(function(){
     db : {
       view : "messages",
       changes : true,
+      // If you don't know what filters are in CouchDB, then read it up here:
+      // <a href="http://guide.couchdb.org/draft/notifications.html#filters">http://guide.couchdb.org/draft/notifications.html#filters</a>
+      // Look up how the filter works in `chat_example/filters/private_messages.js`.
+      // IMPORTANT: see `filters/messages.js` to see how to retrieve remove events
       filter : Backbone.couch_connector.config.ddoc_name + "/messages"
     },
     // The couchdb-connector is capable of mapping the url scheme
@@ -54,7 +58,7 @@ $(function(){
   });
   
   var Messages = new MessagesList();
-  
+
   var PrivateMessage = MessageModel.extend({
   });
   
@@ -64,9 +68,6 @@ $(function(){
       view : "none__",
       changes : false,
       // The filter avoids that private messages appear in the public stream.
-      // If you don't know what filters are in CouchDB, then read it up here:
-      // <a href="http://guide.couchdb.org/draft/notifications.html#filters">http://guide.couchdb.org/draft/notifications.html#filters</a>
-      // Look up how the filter works in `chat_example/filters/private_messages.js`.
       filter : Backbone.couch_connector.config.ddoc_name + "/private_messages"
     },
     
@@ -76,7 +77,7 @@ $(function(){
   });
   
   var PrivateMessages = new PrivateMessageList();
-  
+
   // Displays the current user's name and the message input field.
   var InputView = Backbone.View.extend({
     el : $('#input'),
@@ -136,16 +137,34 @@ $(function(){
     
     template : _.template($("#entry-template").html()),
     
+    events : {
+      "click .delete" : "delete_me"
+    },
+    
     // If there's a change in our model, rerender it
     initialize : function(){
-      _.bindAll(this, 'render');
+      _.bindAll(this, 'render', 'delete_me', 'delete_row');
       this.model.bind('change', this.render);
+      this.model.bind('remove', this.delete_row);
     },
     
     render : function(){ 
       var content = this.model.toJSON();
       $(this.el).html(this.template(content));
       return this;
+    },
+    
+    delete_me : function(){
+      if(CurrentUser.get('name') == this.model.get('from')){
+        this.model.destroy();
+        this.delete_row(); 
+      }else{
+        alert("You can only delete your own messages!");
+      }
+    },
+    
+    delete_row : function(){
+      $(this.el).remove();
     }
   });
   
@@ -258,12 +277,9 @@ $(function(){
     }
   });
 
-  var UserList = new UserListCollection();
-
   // The App router initializes the app by calling `UserList.fetch()`
   var App = Backbone.Router.extend({
     initialize : function(){
-      console.log("start");
       UserList.fetch();
     }
   });
@@ -312,6 +328,6 @@ $(function(){
     new MessagesList();
     new UserListView();
     new App();
-    
+
   }, 100);
 });
