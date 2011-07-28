@@ -1,8 +1,8 @@
 $(function(){
   // Fill this with your database information.
-  // `ddocName` is the name of your couchapp project.
+  // `ddoc_name` is the name of your couchapp project.
   Backbone.couch_connector.config.db_name = "backbone-couchapp";
-  Backbone.couch_connector.config.ddocName = "backbone_couchapp_comments";
+  Backbone.couch_connector.config.ddoc_name = "backbone_couchapp_comments";
 
   // If set to true, the connector will listen to the changes feed
   // and will provide your models with real time remote updates.
