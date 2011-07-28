@@ -3,6 +3,6 @@ function(doc, req){
     return true;
   else if (req.query && req.query.collection && doc._deleted) // has the document been deleted?
     return true;
-  else
+  else // do nothing
     return false;
 }
