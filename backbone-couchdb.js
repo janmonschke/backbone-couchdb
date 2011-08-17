@@ -68,7 +68,7 @@
         }
         if (coll.db.view != null) {
           _view = coll.db.view;
-          keys = (_ref = coll.db.keys) != null ? _ref : null;
+          keys = (_ref = coll.db.keys) != null ? _ref : {};
         }
       }
       return this.helpers.make_db().view("" + this.config.ddoc_name + "/" + _view, {
