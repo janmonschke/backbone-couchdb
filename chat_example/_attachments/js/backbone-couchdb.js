@@ -1,5 +1,9 @@
 (function() {
-  var con;
+  /*
+  (c) 2011 Jan Monschke
+  v1.0
+  backbone-couchdb.js is licensed under the MIT license.
+  */  var con;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -55,19 +59,22 @@
       }
     },
     read_collection: function(coll, opts) {
-      var keys, _ref, _view;
+      var keys, _opts, _view;
       _view = this.config.view_name;
       keys = [this.helpers.extract_collection_name(coll)];
+      console.log("keys", keys, this.helpers.extract_collection_name(coll));
       if (coll.db != null) {
         if (coll.db.changes || this.config.global_changes) {
           coll.listen_to_changes();
         }
         if (coll.db.view != null) {
           _view = coll.db.view;
-          keys = (_ref = coll.db.keys) != null ? _ref : null;
+        }
+        if (coll.db.keys != null) {
+          keys = coll.db.keys;
         }
       }
-      return this.helpers.make_db().view("" + this.config.ddoc_name + "/" + _view, {
+      _opts = {
         keys: keys,
         success: __bind(function(data) {
           var doc, _i, _len, _ref, _temp;
@@ -82,7 +89,11 @@
         error: function() {
           return opts.error();
         }
-      });
+      };
+      if ((coll.db != null) && (coll.db.view != null) && !(coll.db.keys != null)) {
+        delete _opts.keys;
+      }
+      return this.helpers.make_db().view("" + this.config.ddoc_name + "/" + _view, _opts);
     },
     read_model: function(model, opts) {
       if (!model.id) {

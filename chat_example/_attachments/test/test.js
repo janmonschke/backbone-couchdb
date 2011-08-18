@@ -135,7 +135,8 @@ asyncTest("read collection with custom view" , function(){
 	var CommentList = Backbone.Collection.extend({
 	  db : {
 	    view : "testView",
-	    changes : false
+	    changes : false,
+	    keys : null
 	  },
 		url : "/comments"
 	});
@@ -146,7 +147,7 @@ asyncTest("read collection with custom view" , function(){
 	    start();
 	  },
 	  error : function(){
-	    console.log("error");
+	    console.log("error", arguments);
 	  }
 	});
 });
