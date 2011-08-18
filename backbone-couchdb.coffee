@@ -53,13 +53,15 @@ Backbone.couch_connector = con =
   read_collection : (coll, opts) ->
     _view = @config.view_name
     keys = [@helpers.extract_collection_name coll]
+    console.log "keys", keys, @helpers.extract_collection_name(coll)
     if coll.db?
       coll.listen_to_changes() if coll.db.changes or @config.global_changes
       if coll.db.view?
         _view = coll.db.view
-        keys = coll.db.keys ? []
-
-    @helpers.make_db().view "#{@config.ddoc_name}/#{_view}",
+      if coll.db.keys?
+        keys = coll.db.keys 
+    
+    _opts = 
       keys : keys
       success : (data) =>
         _temp = []
@@ -68,6 +70,13 @@ Backbone.couch_connector = con =
         opts.success _temp
       error : ->
         opts.error()
+    
+    # delete keys if a custom view is requested but no custom keys 
+    if coll.db? and coll.db.view? and not coll.db.keys?
+      delete _opts.keys
+    
+    @helpers.make_db().view "#{@config.ddoc_name}/#{_view}", _opts
+
 
   # Reads a model from the couchdb by it's ID 
   read_model : (model, opts) ->
