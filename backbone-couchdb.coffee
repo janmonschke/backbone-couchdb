@@ -57,7 +57,7 @@ Backbone.couch_connector = con =
       coll.listen_to_changes() if coll.db.changes or @config.global_changes
       if coll.db.view?
         _view = coll.db.view
-        keys = coll.db.keys ? {}
+        keys = coll.db.keys ? []
 
     @helpers.make_db().view "#{@config.ddoc_name}/#{_view}",
       keys : keys
