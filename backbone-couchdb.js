@@ -62,7 +62,6 @@
       var keys, _opts, _view;
       _view = this.config.view_name;
       keys = [this.helpers.extract_collection_name(coll)];
-      console.log("keys", keys, this.helpers.extract_collection_name(coll));
       if (coll.db != null) {
         if (coll.db.changes || this.config.global_changes) {
           coll.listen_to_changes();

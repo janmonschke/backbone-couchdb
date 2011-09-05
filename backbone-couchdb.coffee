@@ -1,6 +1,6 @@
 ###
 (c) 2011 Jan Monschke
-v1.0
+v1.1
 backbone-couchdb.js is licensed under the MIT license.
 ###
 
@@ -53,7 +53,6 @@ Backbone.couch_connector = con =
   read_collection : (coll, opts) ->
     _view = @config.view_name
     keys = [@helpers.extract_collection_name coll]
-    console.log "keys", keys, @helpers.extract_collection_name(coll)
     if coll.db?
       coll.listen_to_changes() if coll.db.changes or @config.global_changes
       if coll.db.view?
