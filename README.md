@@ -11,6 +11,9 @@ Demos
 Changelog
 ---------
 
+* 1.1
+  * Fixed a bug with empty key param
+
 * 1.0
   * CoffeeScript rewrite
   * Support for custom filter functions
