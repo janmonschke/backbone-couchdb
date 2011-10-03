@@ -85,6 +85,15 @@ and I uploaded a file with the [annotated
 source](http://janmonschke.github.com/backbone-couchdb/app.html) of the
 app. (Created with [docco](https://github.com/jashkenas/docco))
 
+Erica support
+-------------
+
+[Erica](http://github.com/benoitc/erica) templates are supported. Simply
+link the backbone-couchdb folder to ~/.erica/templates. Then you can
+create an application using these templates:
+
+    $ erica create template=backbone appid=myappname
+
 Learn more
 ----------
 
