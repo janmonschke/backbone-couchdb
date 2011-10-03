@@ -1,0 +1,16 @@
+{variables, [{appid, "myapp"}, {lang, "javascript"}]}.
+
+{dir, "{{appid}}/_attachments"}.
+{dir, "{{appid}}/views"}.
+{dir, "{{appid}}/views/byCollection"}.
+
+{template, "template/_id", "{{appid}}/_id"}.
+{template, "template/language", "{{appid}}/language"}.
+{file, "template/couchapp_rc", "{{appid}}/.couchapprc"}.
+
+%% backbone
+{file, "backbone-couchdb.js", "{{appid}}/_attachments/backbone-couchdb.js"}.
+{file, "template/backbone.js", "{{appid}}/_attachments/backbone.js"}.
+{file, "template/underscore.js", "{{appid}}/_attachments/underscore.js"}.
+{template, "template/app.js", "{{appid}}/_attachments/app.js"}.
+{file, "template/map.js", "{{appid}}/views/byCollection/map.js"}.
