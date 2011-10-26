@@ -1,0 +1,129 @@
+/* add styles here */
+
+body {
+  font:1em Helvetica, sans-serif;
+  padding:4px;
+}
+
+h1 {
+  margin-top:0;
+}
+
+#account {
+  float:right;
+}
+
+#profile {
+  border:4px solid #edd;
+  background:#fee;
+  padding:8px;
+  margin-bottom:8px;
+}
+
+#items {
+  border:4px solid #dde;
+  background:#eef;
+  padding:8px;
+  width:60%;
+  float:left;
+}
+
+#sidebar {
+  border:4px solid #dfd;
+  padding:8px;
+  float:right;
+  width:30%;
+}
+
+#items li {
+  border:4px solid #f5f5ff;
+  background:#fff;
+  padding:8px;
+  margin:4px 0;
+}
+
+form {
+  padding:4px;
+  margin:6px;
+  background-color:#ddd;  
+}
+
+div.avatar {
+  padding:2px;
+  padding-bottom:0;
+  margin-right:4px;
+  float:left;
+  font-size:0.78em;
+  width : 60px;
+  height : 60px;
+  text-align: center;
+}
+
+div.avatar .name {
+  padding-top:2px;
+}
+
+div.avatar img {
+  margin:0 auto;
+  padding:0;
+  width : 40px;
+  height : 40px;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul#messages {
+  width: 80%;
+}
+
+ul#userlist {
+  float: right;
+  width: 20%;
+  background: #fff000;
+}
+
+li {
+  padding: 3px 3px;
+}
+
+li.private{
+  background: #ccc;
+}
+
+li.user {
+  cursor: pointer;
+}
+
+#input{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  padding: 10px;
+  background: #aaa;
+  width: 100%;
+}
+
+#name {
+  margin-right: 15px;
+}
+
+#message {
+  width: 200px;
+  height: 1.5em;
+}
+
+span.delete{
+  opacity: 0;
+  padding: 2px;
+  margin-left: 10px;
+}
+
+span.delete:hover{
+  opacity: 1;
+  color: #ffffff;
+  background: #000000;
+}
