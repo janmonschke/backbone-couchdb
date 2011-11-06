@@ -31,8 +31,17 @@ Backbone.couch_connector = con =
       # jquery.couch.js adds the id itself, so we delete the id if it is in the url.
       # "collection/:id" -> "collection"
       _splitted = _name.split "/"
-      _name = if _splitted.length > 0 then _splitted[0] else _name
-      _name = _name.replace "/", ""
+
+      # only pop off the last component if it is the id
+      if (_splitted.length > 0)
+        if (model.id == _splitted[_splitted.length - 1])
+          _splitted.pop()
+        _name = _splitted.join('/')
+
+      # remove any leading slash
+      if (_name.indexOf("/") == 0)
+        _name = _name.replace("/", "")
+
       _name
     
     # creates a database instance from the 

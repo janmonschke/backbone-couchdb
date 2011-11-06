@@ -1,9 +1,10 @@
 (function() {
   /*
   (c) 2011 Jan Monschke
-  v1.0
+  v1.1
   backbone-couchdb.js is licensed under the MIT license.
-  */  var con;
+  */
+  var con;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -38,8 +39,15 @@
           _name = _name.slice(1, _name.length);
         }
         _splitted = _name.split("/");
-        _name = _splitted.length > 0 ? _splitted[0] : _name;
-        _name = _name.replace("/", "");
+        if (_splitted.length > 0) {
+          if (model.id === _splitted[_splitted.length - 1]) {
+            _splitted.pop();
+          }
+          _name = _splitted.join('/');
+        }
+        if (_name.indexOf("/") === 0) {
+          _name = _name.replace("/", "");
+        }
         return _name;
       },
       make_db: function() {
@@ -157,11 +165,12 @@
     }
   };
   Backbone.Collection = (function() {
-    function Collection() {
-      this._db_on_change = __bind(this._db_on_change, this);;
-      this._db_prepared_for_changes = __bind(this._db_prepared_for_changes, this);;      Collection.__super__.constructor.apply(this, arguments);
-    }
     __extends(Collection, Backbone.Collection);
+    function Collection() {
+      this._db_on_change = __bind(this._db_on_change, this);
+      this._db_prepared_for_changes = __bind(this._db_prepared_for_changes, this);
+      Collection.__super__.constructor.apply(this, arguments);
+    }
     Collection.prototype.initialize = function() {
       if (!this._db_changes_enabled && ((this.db && this.db.changes) || con.config.global_changes)) {
         return this.listen_to_changes();
@@ -213,10 +222,10 @@
     return Collection;
   })();
   Backbone.Model = (function() {
+    __extends(Model, Backbone.Model);
     function Model() {
       Model.__super__.constructor.apply(this, arguments);
     }
-    __extends(Model, Backbone.Model);
     Model.prototype.idAttribute = "_id";
     return Model;
   })();
