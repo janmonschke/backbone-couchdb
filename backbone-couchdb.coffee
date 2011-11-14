@@ -12,8 +12,15 @@ Backbone.couch_connector = con =
     view_name : "byCollection"
     # if true, all Collections will have the _changes feed enabled
     global_changes : false
+    # if true, a single changes feed connection will be used
+    single_feed : false
     # change the databse base_url to be able to fetch from a remote couchdb
     base_url : null
+  
+  # global changes feed for all collections
+  _global_db_inst: null
+  _global_changes_handler: null
+  _global_changes_callbacks: []
   
   # some helper methods for the connector
   helpers : 
@@ -43,6 +50,10 @@ Backbone.couch_connector = con =
         _name = _name.replace("/", "")
 
       _name
+    
+    # default local filter which selects documents of a given collection
+    filter_collection : (results, collection_name) ->
+      entry for entry in results when (entry.deleted == true) || (entry.doc?.collection == collection_name)
     
     # creates a database instance from the 
     make_db : ->
@@ -85,6 +96,27 @@ Backbone.couch_connector = con =
     
     @helpers.make_db().view "#{@config.ddoc_name}/#{_view}", _opts
 
+  # initializes the single global changes handler
+  init_global_changes_handler : (callback) ->
+    @_global_db_inst = con.helpers.make_db()
+    @_global_db_inst.info
+      "success" : (data) => 
+        # initialize the global changes handler
+        opts = _.extend { include_docs : true }, con.config.global_changes_opts
+        @_global_changes_handler = @_global_db_inst.changes (data.update_seq || 0), opts
+        # register a callback which delegates to every registered collection
+        @_global_changes_handler.onChange (changes) =>
+          cb(changes) for cb in @_global_changes_callbacks
+        callback()
+
+  # registers a collection callback with the global changes feed
+  register_global_changes_callback : (callback) ->
+    return unless callback?
+    if !@_global_db_inst?
+      @init_global_changes_handler =>
+        @_global_changes_callbacks.push callback
+    else
+      @_global_changes_callbacks.push callback
 
   # Reads a model from the couchdb by it's ID 
   read_model : (model, opts) ->
@@ -142,9 +174,14 @@ class Backbone.Collection extends Backbone.Collection
     # don't enable changes feed a second time
     unless @_db_changes_enabled
       @_db_changes_enabled = true
-      @_db_inst = con.helpers.make_db() unless @_db_inst
-      @_db_inst.info
-        "success" : @_db_prepared_for_changes
+      if con.config.single_feed
+        # if we are using a single feed, don't set up a separate connection for the collection
+        # register a callback with the global changes handler
+        @_db_prepared_for_global_changes()
+      else
+        @_db_inst = con.helpers.make_db() unless @_db_inst
+        @_db_inst.info
+          "success" : @_db_prepared_for_changes
 
   # Stop listening to real time updates
   stop_changes : ->
@@ -153,6 +190,7 @@ class Backbone.Collection extends Backbone.Collection
       @_db_changes_handler.stop()
       @_db_changes_handler = null
 
+  # sets up a new changes feed for this collection
   _db_prepared_for_changes : (data) =>
     @_db_update_seq = data.update_seq || 0
     opts = 
@@ -163,9 +201,18 @@ class Backbone.Collection extends Backbone.Collection
     _.defer => 
       @_db_changes_handler = @_db_inst.changes(@_db_update_seq, opts)
       @_db_changes_handler.onChange @._db_on_change
-    
+  
+  # registers this collection's change handler with the global change feed
+  _db_prepared_for_global_changes : =>
+    con.register_global_changes_callback(@_db_on_change)
+  
   _db_on_change : (changes) =>
-    for _doc in changes.results
+    results = changes.results
+    if @db and @db.local_filter # if a local filter has been defined on the collection, use it
+      results = @db.local_filter(results)
+    else if con.config.single_feed # otherwise, if we are using a single feed, use the default global changes collection filter
+      results = con.helpers.filter_collection(results, con.helpers.extract_collection_name(@))
+    for _doc in results
       obj = @get _doc.id
       # test if collection contains the doc, if not, we add it to the collection
       if obj?
