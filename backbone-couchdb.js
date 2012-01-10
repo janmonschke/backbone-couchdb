@@ -1,7 +1,7 @@
 (function() {
   /*
   (c) 2011 Jan Monschke
-  v1.0
+  v1.1
   backbone-couchdb.js is licensed under the MIT license.
   */  var con;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
@@ -83,10 +83,12 @@
             doc = _ref[_i];
             _temp.push(doc.value);
           }
-          return opts.success(_temp);
+          opts.success(_temp);
+          return opts.complete();
         }, this),
         error: function() {
-          return opts.error();
+          opts.error();
+          return opts.complete();
         }
       };
       if ((coll.db != null) && (coll.db.view != null) && !(coll.db.keys != null)) {
@@ -100,10 +102,12 @@
       }
       return this.helpers.make_db().openDoc(model.id, {
         success: function(doc) {
-          return opts.success(doc);
+          opts.success(doc);
+          return opts.complete();
         },
         error: function() {
-          return opts.error();
+          opts.error();
+          return opts.complete();
         }
       });
     },
@@ -116,13 +120,15 @@
       }
       return this.helpers.make_db().saveDoc(vals, {
         success: function(doc) {
-          return opts.success({
+          opts.success({
             _id: doc.id,
             _rev: doc.rev
           });
+          return opts.complete();
         },
         error: function() {
-          return opts.error();
+          opts.error();
+          return opts.complete();
         }
       });
     },
@@ -136,15 +142,21 @@
         },
         error: function(nr, req, e) {
           if (e === "deleted") {
-            return opts.success();
+            opts.success();
+            return opts.complete();
           } else {
-            return opts.error();
+            opts.error();
+            return opts.complete();
           }
         }
       });
     }
   };
   Backbone.sync = function(method, model, opts) {
+    var _ref, _ref2, _ref3;
+    (_ref = opts.success) != null ? _ref : opts.success = function() {};
+    (_ref2 = opts.error) != null ? _ref2 : opts.error = function() {};
+    (_ref3 = opts.complete) != null ? _ref3 : opts.complete = function() {};
     switch (method) {
       case "read":
         return con.read(model, opts);

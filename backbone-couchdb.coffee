@@ -67,8 +67,10 @@ Backbone.couch_connector = con =
         for doc in data.rows
           _temp.push doc.value
         opts.success _temp
+        opts.complete()
       error : ->
         opts.error()
+        opts.complete()
     
     # delete keys if a custom view is requested but no custom keys 
     if coll.db? and coll.db.view? and not coll.db.keys?
@@ -83,8 +85,10 @@ Backbone.couch_connector = con =
     @helpers.make_db().openDoc model.id,
       success : (doc) -> 
         opts.success(doc)
+        opts.complete()
       error : ->
         opts.error()
+        opts.complete()
   
   # Creates a model in the db
   create : (model, opts) ->
@@ -96,8 +100,10 @@ Backbone.couch_connector = con =
         opts.success
           _id : doc.id
           _rev : doc.rev
+        opts.complete()
       error : ->
         opts.error()
+        opts.complete()
 
   # jquery.couch.js uses the same method for updating as it uses for creating a document, so we can use the `create` method here. ###
   update : (model, opts) ->
@@ -112,11 +118,17 @@ Backbone.couch_connector = con =
         if e == "deleted"
           # The doc does no longer exist on the server
           opts.success()
+          opts.complete()
         else
           opts.error()
+          opts.complete()
 
 # Overriding the sync method here to make the connector work ###
 Backbone.sync = (method, model, opts) ->
+  opts.success ?= ->
+  opts.error ?= ->
+  opts.complete ?= ->
+  
   switch method
     when "read" then con.read model, opts
     when "create" then con.create model, opts
