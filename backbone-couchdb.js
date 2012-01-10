@@ -168,12 +168,21 @@
         return con.del(model, opts);
     }
   };
+  Backbone.Model = (function() {
+    function Model() {
+      Model.__super__.constructor.apply(this, arguments);
+    }
+    __extends(Model, Backbone.Model);
+    Model.prototype.idAttribute = "_id";
+    return Model;
+  })();
   Backbone.Collection = (function() {
     function Collection() {
       this._db_on_change = __bind(this._db_on_change, this);;
       this._db_prepared_for_changes = __bind(this._db_prepared_for_changes, this);;      Collection.__super__.constructor.apply(this, arguments);
     }
     __extends(Collection, Backbone.Collection);
+    Collection.prototype.model = Backbone.Model;
     Collection.prototype.initialize = function() {
       if (!this._db_changes_enabled && ((this.db && this.db.changes) || con.config.global_changes)) {
         return this.listen_to_changes();
@@ -223,13 +232,5 @@
       return _results;
     };
     return Collection;
-  })();
-  Backbone.Model = (function() {
-    function Model() {
-      Model.__super__.constructor.apply(this, arguments);
-    }
-    __extends(Model, Backbone.Model);
-    Model.prototype.idAttribute = "_id";
-    return Model;
   })();
 }).call(this);

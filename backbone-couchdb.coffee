@@ -135,8 +135,14 @@ Backbone.sync = (method, model, opts) ->
     when "update" then con.update model, opts
     when "delete" then con.del model, opts
 
+class Backbone.Model extends Backbone.Model
+  # change the idAttribute since CouchDB uses _id
+  idAttribute : "_id"
+
 # Adds some more methods to Collections that are needed for the connector ###
 class Backbone.Collection extends Backbone.Collection
+  model : Backbone.Model
+  
   initialize : ->
     @listen_to_changes() if !@_db_changes_enabled && ((@db and @db.changes) or con.config.global_changes)
 
@@ -180,8 +186,3 @@ class Backbone.Collection extends Backbone.Collection
           obj.set _doc.doc unless obj.get("_rev") == _doc.doc._rev 
       else
         @add _doc.doc if !_doc.deleted
-      
-
-class Backbone.Model extends Backbone.Model
-  # change the idAttribute since CouchDB uses _id
-  idAttribute : "_id"
