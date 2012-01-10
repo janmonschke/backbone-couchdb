@@ -59,7 +59,7 @@ and configure the connector with your database infos.
     Backbone.couch_connector.config.global_changes = false;
 	
 As you can see you also need to create a new database in your CouchDB
-and a new design document that contains the following view:
+and a new design document that contains the following view called "byCollection":
 
     function(doc) {
         if (doc.collection) {
