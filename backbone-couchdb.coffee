@@ -173,3 +173,10 @@ class Backbone.Collection extends Backbone.Collection
 class Backbone.Model extends Backbone.Model
   # change the idAttribute since CouchDB uses _id
   idAttribute : "_id"
+  clone : ->
+    new_model = new @constructor(@)
+    # remove _id and _rev attributes on the cloned model object to have a **really** new, unsaved model object.
+    # _id and _rev only exist on objects that have been saved, so check for existence is needed.
+    delete new_model.attributes._id if new_model.attributes._id
+    delete new_model.attributes._rev if new_model.attributes._rev
+    new_model
