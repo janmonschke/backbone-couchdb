@@ -59,9 +59,10 @@
       }
     },
     read_collection: function(coll, opts) {
-      var keys, _opts, _view;
+      var keys, _opts, _view,startkey,endkey;
       _view = this.config.view_name;
       keys = [this.helpers.extract_collection_name(coll)];
+	  
       if (coll.db != null) {
         if (coll.db.changes || this.config.global_changes) {
           coll.listen_to_changes();
@@ -72,9 +73,17 @@
         if (coll.db.keys != null) {
           keys = coll.db.keys;
         }
+		if (coll.db.startkey != null) {
+			startkey = coll.db.startkey;
+		}
+		if (coll.db.startkey != null && coll.db.endkey != null) {
+			endkey = coll.db.endkey;
+		}
       }
       _opts = {
         keys: keys,
+		startkey : startkey,
+		endkey : endkey,
         success: __bind(function(data) {
           var doc, _i, _len, _ref, _temp;
           _temp = [];
@@ -94,6 +103,16 @@
       if ((coll.db != null) && (coll.db.view != null) && !(coll.db.keys != null)) {
         delete _opts.keys;
       }
+	  if ((coll.db != null) && (coll.db.view != null) && !(coll.db.startkey != null)) {
+		delete _opts.startkey;
+		delete _opts.endkey;
+	  }
+	  if ((coll.db != null) && (coll.db.view != null) && !(coll.db.endkey != null)) {
+		delete _opts.endkey;
+	  }
+	  if ((coll.db != null) && (coll.db.view != null) && (coll.db.startkey != null)) {
+		delete _opts.keys;
+	  }
       return this.helpers.make_db().view("" + this.config.ddoc_name + "/" + _view, _opts);
     },
     read_model: function(model, opts) {
@@ -174,17 +193,6 @@
     }
     __extends(Model, Backbone.Model);
     Model.prototype.idAttribute = "_id";
-    Model.prototype.clone = function() {
-        var new_model;
-        new_model = new this.constructor(this);
-        if (new_model.attributes._id) {
-          delete new_model.attributes._id;
-        }
-        if (new_model.attributes._rev) {
-          delete new_model.attributes._rev;
-        }
-        return new_model;
-      };
     return Model;
   })();
   Backbone.Collection = (function() {
