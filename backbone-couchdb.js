@@ -193,6 +193,17 @@
     }
     __extends(Model, Backbone.Model);
     Model.prototype.idAttribute = "_id";
+	Model.prototype.clone = function() {
+	    var new_model;
+	    new_model = new this.constructor(this);
+	    if (new_model.attributes._id) {
+	      delete new_model.attributes._id;
+	    }
+	    if (new_model.attributes._rev) {
+	      delete new_model.attributes._rev;
+	    }
+	    return new_model;
+      };
     return Model;
   })();
   Backbone.Collection = (function() {
