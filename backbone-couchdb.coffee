@@ -62,6 +62,8 @@ Backbone.couch_connector = con =
     
     _opts = 
       keys : keys
+      startkey : startkey
+      endkey : endkey
       success : (data) =>
         _temp = []
         for doc in data.rows
@@ -72,9 +74,17 @@ Backbone.couch_connector = con =
         opts.error()
         opts.complete()
     
-    # delete keys if a custom view is requested but no custom keys 
-    if coll.db? and coll.db.view? and not coll.db.keys?
-      delete _opts.keys
+    # delete keys if a custom view is requested but no custom keys
+    if coll.db? and coll.db.view?
+      if not coll.db.keys?
+        delete _opts.keys
+      if not coll.db.startkey?
+        delete _opts.startkey
+        delete _opts.endkey
+      else
+        delete _opts.key
+      if not coll.db.endkey?
+        delete _opts.endkey       
     
     @helpers.make_db().view "#{@config.ddoc_name}/#{_view}", _opts
 
