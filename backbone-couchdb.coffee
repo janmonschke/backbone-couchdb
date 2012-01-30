@@ -71,7 +71,29 @@ Backbone.couch_connector = con =
       error : ->
         opts.error()
         opts.complete()
-    
+
+    # support view querying opts http://wiki.apache.org/couchdb/HTTP_view_API    
+    if opts.limit?
+       _opts.limit = opts.limit;
+
+    if opts.skip?
+       _opts.skip = opts.skip;
+
+    if opts.include_docs?
+       _opts.include_docs = opts.include_docs;
+
+    if opts.startkey?
+       _opts.startkey = opts.startkey;
+
+    if opts.endkey?
+       _opts.endkey = opts.endkey;
+
+    if opts.startkey_docid?
+       _opts.startkey_docid = opts.startkey_docid;
+
+    if opts.endkey_docid?
+       _opts.endkey_docid = opts.endkey_docid;
+
     # delete keys if a custom view is requested but no custom keys 
     if coll.db? and coll.db.view? and not coll.db.keys?
       delete _opts.keys
