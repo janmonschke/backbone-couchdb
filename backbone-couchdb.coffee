@@ -65,7 +65,7 @@ Backbone.couch_connector = con =
       success : (data) =>
         _temp = []
         for doc in data.rows
-          _temp.push doc.value
+          if doc.value then _temp.push doc.value else _temp.push doc.doc
         opts.success _temp
         opts.complete()
       error : ->
