@@ -10,6 +10,7 @@ Backbone.couch_connector = con =
     db_name : "backbone_connect"
     ddoc_name : "backbone_example"
     view_name : "byCollection"
+    list_name : null
     # if true, all Collections will have the _changes feed enabled
     global_changes : false
     # change the databse base_url to be able to fetch from a remote couchdb
@@ -52,6 +53,7 @@ Backbone.couch_connector = con =
   # Reads all docs of a collection based on the byCollection view or a custom view specified by the collection
   read_collection : (coll, opts) ->
     _view = @config.view_name
+    _list = @config.list_name
     keys = [@helpers.extract_collection_name coll]
     if coll.db?
       coll.listen_to_changes() if coll.db.changes or @config.global_changes
@@ -59,6 +61,8 @@ Backbone.couch_connector = con =
         _view = coll.db.view
       if coll.db.keys?
         keys = coll.db.keys 
+      if coll.db.list?
+        _list = coll.db.list
     
     _opts = 
       keys : keys
@@ -98,7 +102,10 @@ Backbone.couch_connector = con =
     if coll.db? and coll.db.view? and not coll.db.keys?
       delete _opts.keys
     
-    @helpers.make_db().view "#{@config.ddoc_name}/#{_view}", _opts
+    if _list 
+      @helpers.make_db().list "#{@config.ddoc_name}/#{_list}", "#{_view}", _opts   
+    else
+      @helpers.make_db().view "#{@config.ddoc_name}/#{_view}", _opts    
 
 
   # Reads a model from the couchdb by it's ID 
