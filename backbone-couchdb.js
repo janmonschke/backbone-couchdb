@@ -65,6 +65,7 @@ backbone-couchdb.js is licensed under the MIT license.
         }
         if (coll.db.view != null) _view = coll.db.view;
         if (coll.db.keys != null) keys = coll.db.keys;
+        if (coll.db.list != null) _list = coll.db.list;
       }
       _opts = {
         keys: keys,

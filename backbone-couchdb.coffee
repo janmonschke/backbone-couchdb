@@ -61,6 +61,8 @@ Backbone.couch_connector = con =
         _view = coll.db.view
       if coll.db.keys?
         keys = coll.db.keys 
+      if coll.db.list?
+        _list = coll.db.list
     
     _opts = 
       keys : keys
