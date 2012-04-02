@@ -53,12 +53,15 @@ Backbone.couch_connector = con =
   # Reads all docs of a collection based on the byCollection view or a custom view specified by the collection
   read_collection : (coll, opts) ->
     _view = @config.view_name
+    _ddoc = @config.ddoc_name
     _list = @config.list_name
     keys = [@helpers.extract_collection_name coll]
     if coll.db?
       coll.listen_to_changes() if coll.db.changes or @config.global_changes
       if coll.db.view?
         _view = coll.db.view
+      if coll.db.ddoc?
+        _ddoc = coll.db.ddoc
       if coll.db.keys?
         keys = coll.db.keys 
       if coll.db.list?
@@ -103,9 +106,9 @@ Backbone.couch_connector = con =
       delete _opts.keys
     
     if _list 
-      @helpers.make_db().list "#{@config.ddoc_name}/#{_list}", "#{_view}", _opts   
+      @helpers.make_db().list "#{_ddoc}/#{_list}", "#{_view}", _opts   
     else
-      @helpers.make_db().view "#{@config.ddoc_name}/#{_view}", _opts    
+      @helpers.make_db().view "#{_ddoc}/#{_view}", _opts    
 
 
   # Reads a model from the couchdb by it's ID 
