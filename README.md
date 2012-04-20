@@ -1,4 +1,4 @@
-Permits to use the keys attributes from a CouchDb query like : url/aDbName>/_design/aDocument>/_view/aView?keys=["aKey"]
+Permits to use the keys attributes from a CouchDb query like : url/aDbName/_design/aDocument/_view/aView?keys=["aKey"]
 
 see http://wiki.apache.org/couchdb/HTTP_view_API
 
