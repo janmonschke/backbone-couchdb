@@ -12,8 +12,8 @@ backbone-couchdb.js is licensed under the MIT license.
 
   Backbone.couch_connector = con = {
     config: {
-      db_name: "backbone_connect",
-      ddoc_name: "backbone_example",
+      db_name: "stample",
+      ddoc_name: "stample",
       view_name: "byCollection",
       list_name: null,
       global_changes: false,
@@ -87,6 +87,12 @@ backbone-couchdb.js is licensed under the MIT license.
           return opts.complete();
         }
       };
+      // if (opts.key != null) _opts.key = opts.key;  // pas le code dans jquery couchdb pour que cela marche
+      if (opts.keys != null)
+      {
+          coll.db.keys =  opts.keys;
+          _opts.keys = opts.keys;
+      }
       if (opts.limit != null) _opts.limit = opts.limit;
       if (opts.skip != null) _opts.skip = opts.skip;
       if (opts.include_docs != null) _opts.include_docs = opts.include_docs;
@@ -126,7 +132,7 @@ backbone-couchdb.js is licensed under the MIT license.
       return this.helpers.make_db().saveDoc(vals, {
         success: function(doc) {
           opts.success({
-            _id: doc.id,
+           _id: doc.id,
             _rev: doc.rev
           });
           return opts.complete();
