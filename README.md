@@ -1,3 +1,22 @@
+Permits to use the keys attributes from a CouchDb query like : url/<dbName>/_design/<document>/_view/<aView>?keys=["aKey"]
+
+see http://wiki.apache.org/couchdb/HTTP_view_API
+
+In javascript, that give 
+
+aCollection.fetch({
+	keys:[aKey],
+	success:function () {
+		...
+	},
+	error:function () {
+		...
+	}
+});
+
+Rq : I didn't change the backbone-couchdb.coffee file, only the js file
+
+
 backbone-couchdb
 ================
 
@@ -14,6 +33,7 @@ Demos
 
 Changelog
 ---------
+
 
 * 1.1
   * Fixed a bug with empty key param
