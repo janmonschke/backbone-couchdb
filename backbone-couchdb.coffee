@@ -137,10 +137,21 @@ Backbone.couch_connector = con =
         opts.error()
         opts.complete()
 
-  # jquery.couch.js uses the same method for updating as it uses for creating a document, so we can use the `create` method here. ###
-  update : (model, opts) ->
-    @create(model, opts)
-
+		#Updates a model by it's ID
+		update : (model, opts) ->
+			_opts = _.clone opts
+			fun = "#{@config.ddoc_name}/#{opts.updateFun}"
+			delete opts.updateFun
+			opts.success = (doc) ->
+				_opts.success
+					_id : doc.id
+					_rev : doc.rev
+				_opts.complete()
+			opts.error = (doc) ->
+				_opts.error()
+				_opts.complete()
+			@helpers.make_db().updateDoc fun, model.id, opts
+		
   # Deletes a model from the db
   del : (model, opts) ->
     @helpers.make_db().removeDoc model.toJSON(),

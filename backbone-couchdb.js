@@ -1,3 +1,4 @@
+
 /*
 (c) 2011 Jan Monschke
 v1.1
@@ -54,7 +55,7 @@ backbone-couchdb.js is licensed under the MIT license.
       }
     },
     read_collection: function(coll, opts) {
-      var keys, _opts, _view, _ddoc, _list
+      var keys, _ddoc, _list, _opts, _view,
         _this = this;
       _view = this.config.view_name;
       _ddoc = this.config.ddoc_name;
@@ -77,7 +78,11 @@ backbone-couchdb.js is licensed under the MIT license.
           _ref = data.rows;
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             doc = _ref[_i];
-            (doc.value) ? _temp.push(doc.value) : _temp.push(doc.doc);
+            if (doc.value) {
+              _temp.push(doc.value);
+            } else {
+              _temp.push(doc.doc);
+            }
           }
           opts.success(_temp);
           return opts.complete();
@@ -97,7 +102,7 @@ backbone-couchdb.js is licensed under the MIT license.
       if ((coll.db != null) && (coll.db.view != null) && !(coll.db.keys != null)) {
         delete _opts.keys;
       }
-      if (_list != null) {
+      if (_list) {
         return this.helpers.make_db().list("" + _ddoc + "/" + _list, "" + _view, _opts);
       } else {
         return this.helpers.make_db().view("" + _ddoc + "/" + _view, _opts);
@@ -138,7 +143,22 @@ backbone-couchdb.js is licensed under the MIT license.
       });
     },
     update: function(model, opts) {
-      return this.create(model, opts);
+      var fun, _opts;
+      _opts = _.clone(opts);
+      fun = "" + this.config.ddoc_name + "/" + opts.updateFun;
+      delete opts.updateFun;
+      opts.success = function(doc) {
+        _opts.success({
+          _id: doc.id,
+          _rev: doc.rev
+        });
+        return _opts.complete();
+      };
+      opts.error = function(doc) {
+        _opts.error();
+        return _opts.complete();
+      };
+      return this.helpers.make_db().updateDoc(fun, model.id, opts);
     },
     del: function(model, opts) {
       return this.helpers.make_db().removeDoc(model.toJSON(), {
