@@ -141,10 +141,7 @@ backbone-couchdb.js is licensed under the MIT license.
           return opts.complete();
         }
       });
-    }
-  };
-
-  ({
+    },
     update: function(model, opts) {
       var fun, _opts;
       _opts = _.clone(opts);
@@ -161,27 +158,25 @@ backbone-couchdb.js is licensed under the MIT license.
         _opts.error();
         return _opts.complete();
       };
-      this.helpers.make_db().updateDoc(fun, model.id, opts);
-      return {
-        del: function(model, opts) {
-          return this.helpers.make_db().removeDoc(model.toJSON(), {
-            success: function() {
-              return opts.success();
-            },
-            error: function(nr, req, e) {
-              if (e === "deleted") {
-                opts.success();
-                return opts.complete();
-              } else {
-                opts.error();
-                return opts.complete();
-              }
-            }
-          });
+      return this.helpers.make_db().updateDoc(fun, model.id, opts);
+    },
+    del: function(model, opts) {
+      return this.helpers.make_db().removeDoc(model.toJSON(), {
+        success: function() {
+          return opts.success();
+        },
+        error: function(nr, req, e) {
+          if (e === "deleted") {
+            opts.success();
+            return opts.complete();
+          } else {
+            opts.error();
+            return opts.complete();
+          }
         }
-      };
+      });
     }
-  });
+  };
 
   Backbone.sync = function(method, model, opts) {
     if (opts.success == null) opts.success = function() {};
