@@ -1,0 +1,10 @@
+{
+  "name": "backbone-couchdb-testing",
+  "version": "0.0.1",
+  "engines": {
+    "node": "~0.6.10"
+  },
+  "dependencies": {
+    "express": "2.5.9"
+  }
+}
