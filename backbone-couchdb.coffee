@@ -75,9 +75,13 @@ Backbone.couch_connector = con =
           if doc.value then _temp.push doc.value else _temp.push doc.doc
         opts.success _temp
         opts.complete()
-      error : ->
-        opts.error()
-        opts.complete()
+      error : (status, error, reason) ->
+        res = 
+          status: status
+          error: error
+          reason: reason
+        opts.error res
+        opts.complete res
 
     # support view querying opts http://wiki.apache.org/couchdb/HTTP_view_API    
     if opts.limit?
@@ -118,9 +122,13 @@ Backbone.couch_connector = con =
       success : (doc) -> 
         opts.success(doc)
         opts.complete()
-      error : ->
-        opts.error()
-        opts.complete()
+      error : (status, error, reason) ->
+        res = 
+          status: status
+          error: error
+          reason: reason
+        opts.error res
+        opts.complete res
   
   # Creates a model in the db
   create : (model, opts) ->
@@ -133,9 +141,13 @@ Backbone.couch_connector = con =
           _id : doc.id
           _rev : doc.rev
         opts.complete()
-      error : ->
-        opts.error()
-        opts.complete()
+      error : (status, error, reason) ->
+        res = 
+          status: status
+          error: error
+          reason: reason
+        opts.error res
+        opts.complete res
 
   # jquery.couch.js uses the same method for updating as it uses for creating a document, so we can use the `create` method here. ###
   update : (model, opts) ->
@@ -152,8 +164,12 @@ Backbone.couch_connector = con =
           opts.success()
           opts.complete()
         else
-          opts.error()
-          opts.complete()
+          res = 
+            status: status
+            error: error
+            reason: reason
+          opts.error res
+          opts.complete res
 
 # Overriding the sync method here to make the connector work ###
 Backbone.sync = (method, model, opts) ->
