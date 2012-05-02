@@ -20,6 +20,7 @@ Changelog
   * Fix for views that emit `null` [#35](https://github.com/janmonschke/backbone-couchdb/pull/35)
   * A better way to test the library [/test](https://github.com/janmonschke/backbone-couchdb/tree/master/test)
   * more request information in error callbacks [#20](https://github.com/janmonschke/backbone-couchdb/issues/20#issuecomment-5461404)
+  * Support for more options when fetching a collection [#34](https://github.com/janmonschke/backbone-couchdb/pull/34)
 
 * 1.1
   * Fixed a bug with empty key param
