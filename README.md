@@ -14,6 +14,11 @@ Demos
 
 Changelog
 ---------
+* 1.2 (not yet released, still preparing)
+  * CouchDB list support [#37](https://github.com/janmonschke/backbone-couchdb/pull/37)
+  * Support for custom design documents for collections [#38](https://github.com/janmonschke/backbone-couchdb/pull/38)
+  * Fix for views that emit `null` [#35](https://github.com/janmonschke/backbone-couchdb/pull/35)
+  * A better way to test the library [/test](https://github.com/janmonschke/backbone-couchdb/tree/master/test)
 
 * 1.1
   * Fixed a bug with empty key param
@@ -31,7 +36,7 @@ Dependencies (already included in the examples)
 
 * [Backbone.js](https://github.com/documentcloud/backbone) (>= 0.5.1)
 * [Underscore.js](https://github.com/documentcloud/underscore)
-* [jquery.couch.js](https://github.com/apache/couchdb/blob/trunk/share/www/script/jquery.couch.js)
+* [jquery.couch.js](https://github.com/daleharvey/jquery.couch.js)
 * [jQuery](http://www.jquery.com/)
 
 Why a new connector?
