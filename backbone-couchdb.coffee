@@ -149,21 +149,28 @@ Backbone.couch_connector = con =
         opts.error res
         opts.complete res
 
-  #Updates a model by it's ID
+  # Updates a model by it's ID
   update : (model, opts) ->
-    if opts.updateFun
-      _opts = _.clone opts
-      fun = "#{@config.ddoc_name}/#{opts.updateFun}"
-      delete opts.updateFun
-      opts.success = (doc) ->
-        _opts.success
-          _id : doc.id
-          _rev : doc.rev
-        _opts.complete()
-      opts.error = (doc) ->
-        _opts.error()
-        _opts.complete()
-      @helpers.make_db().updateDoc fun, model.id, opts
+    if model.updateFun
+      new_opts =
+        success : (doc) ->
+          opts.success
+            _id : doc.id
+            _rev : doc.rev
+          opts.complete()
+        error : (status, error, reason) ->
+          res =
+            status : status
+            error : error
+            reason : reason
+          opts.error res
+          opts.complete res
+      changedKeys = _.keys opts.changes
+      if changedKeys.length > 0
+        _.extend new_opts, _.pick model.toJSON(), changedKeys
+      else
+        _.extend new_opts, model.toJSON()
+      @helpers.make_db().updateDoc "#{@config.ddoc_name}/#{model.updateFun}", model.id, new_opts
     else
       @create model, opts
     

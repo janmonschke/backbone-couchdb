@@ -161,7 +161,37 @@ backbone-couchdb.js is licensed under the MIT license.
       });
     },
     update: function(model, opts) {
-      return this.create(model, opts);
+      var changedKeys, new_opts;
+      if (model.updateFun) {
+        new_opts = {
+          success: function(doc) {
+            opts.success({
+              _id: doc.id,
+              _rev: doc.rev
+            });
+            return opts.complete();
+          },
+          error: function(status, error, reason) {
+            var res;
+            res = {
+              status: status,
+              error: error,
+              reason: reason
+            };
+            opts.error(res);
+            return opts.complete(res);
+          }
+        };
+        changedKeys = _.keys(opts.changes);
+        if (changedKeys.length > 0) {
+          _.extend(new_opts, _.pick(model.toJSON(), changedKeys));
+        } else {
+          _.extend(new_opts, model.toJSON());
+        }
+        return this.helpers.make_db().updateDoc("" + this.config.ddoc_name + "/" + model.updateFun, model.id, new_opts);
+      } else {
+        return this.create(model, opts);
+      }
     },
     del: function(model, opts) {
       return this.helpers.make_db().removeDoc(model.toJSON(), {
