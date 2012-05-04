@@ -161,8 +161,11 @@ backbone-couchdb.js is licensed under the MIT license.
       });
     },
     update: function(model, opts) {
-      var changedKeys, new_opts;
-      if (model.updateFun) {
+      var changedKeys, db, new_opts;
+      db = this.helpers.make_db();
+      if (!model.updateFun) {
+        return this.create(model, opts);
+      } else if (db.updateDoc) {
         new_opts = {
           success: function(doc) {
             opts.success({
@@ -190,7 +193,7 @@ backbone-couchdb.js is licensed under the MIT license.
         }
         return this.helpers.make_db().updateDoc("" + this.config.ddoc_name + "/" + model.updateFun, model.id, new_opts);
       } else {
-        return this.create(model, opts);
+        return console.error("Your version of jquery.couch.js does not contain db.updateDoc.       To use this feature you must update from https://github.com/daleharvey/jquery.couch.js");
       }
     },
     del: function(model, opts) {

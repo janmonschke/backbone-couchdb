@@ -151,7 +151,10 @@ Backbone.couch_connector = con =
 
   # Updates a model by it's ID
   update : (model, opts) ->
-    if model.updateFun
+    db = @helpers.make_db()
+    if not model.updateFun
+      @create model, opts
+    else if db.updateDoc
       new_opts =
         success : (doc) ->
           opts.success
@@ -172,7 +175,8 @@ Backbone.couch_connector = con =
         _.extend new_opts, model.toJSON()
       @helpers.make_db().updateDoc "#{@config.ddoc_name}/#{model.updateFun}", model.id, new_opts
     else
-      @create model, opts
+      console.error "Your version of jquery.couch.js does not contain db.updateDoc.
+       To use this feature you must update from https://github.com/daleharvey/jquery.couch.js"
     
 		
   # Deletes a model from the db
