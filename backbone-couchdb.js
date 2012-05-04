@@ -5,6 +5,23 @@ backbone-couchdb.js is licensed under the MIT license.
 */
 
 (function() {
+  var _vlist=[];
+  var _llist={};
+  var _irow=0;
+  function emit(key, value) {
+    _vlist.push({'key':key, 'value':value});
+  }
+  function getRow() {
+    if (!_vlist.length || _irow >= _vlist.length) return(null);
+    return(_vlist[_irow++]);
+  }
+  function send(doc) {
+    _llist= doc;
+  }
+  function toJSON(doc) {
+    return(doc);
+  }
+
   var con,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
@@ -17,7 +34,9 @@ backbone-couchdb.js is licensed under the MIT license.
       view_name: "byCollection",
       list_name: null,
       global_changes: false,
-      base_url: null
+      base_url: null,
+      view_func: null,
+      list_func: null
     },
     helpers: {
       extract_collection_name: function(model) {
@@ -61,14 +80,17 @@ backbone-couchdb.js is licensed under the MIT license.
       _list = this.config.list_name;
       keys = [this.helpers.extract_collection_name(coll)];
       if (coll.db != null) {
+        if (coll.db.db_name != null) {
+          this.config.db_name = coll.db.db_name;
+        }
         if (coll.db.changes || this.config.global_changes) {
           coll.listen_to_changes();
         }
         if (coll.db.view != null) _view = coll.db.view;
         if (coll.db.ddoc != null) _ddoc = coll.db.ddoc;
         if (coll.db.keys != null) keys = coll.db.keys;
-        if (coll.db.list != null) _list = coll.db.list;
-      }
+        if (coll.db.list != null) _list = coll.db.list; 
+     }
       _opts = {
         keys: keys,
         success: function(data) {
@@ -96,6 +118,25 @@ backbone-couchdb.js is licensed under the MIT license.
       if (opts.endkey_docid != null) _opts.endkey_docid = opts.endkey_docid;
       if ((coll.db != null) && (coll.db.view != null) && !(coll.db.keys != null)) {
         delete _opts.keys;
+      }
+      if (_list || _view) {
+        this.helpers.make_db().openDoc("_design/" + _ddoc, {
+          success: function(doc) {
+            if (_view) {
+              eval('var fu=' + doc.views[_view].map);
+              con.config.view_func= fu;
+              //console.log('view_func: ' + con.config.view_func);
+            }
+            if (_list) {
+              eval('var fu=' + doc.lists[_list]);
+              con.config.list_func= fu;
+              //console.log('list_func: ' + con.config.list_func);
+            }
+          },
+          error: function() {
+            console.log("Unable to read design document");
+          }
+        });
       }
       if (_list != null) {
         return this.helpers.make_db().list("" + _ddoc + "/" + _list, "" + _view, _opts);
@@ -249,26 +290,64 @@ backbone-couchdb.js is licensed under the MIT license.
     };
 
     Collection.prototype._db_on_change = function(changes) {
-      var obj, _doc, _i, _len, _ref, _results;
-      _ref = changes.results;
+      var obj, _doc, _i, _len, _rref, _ref, _results;
+      _rref= _ref = changes.results;
+      // Create couchcdb view:
+      if (con.config.view_func) {
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              _doc = _ref[_i];
+              if (_doc) {
+                  if (_doc.doc)
+                      con.config.view_func(_doc.doc);
+                  else
+                      con.config.view_func(_doc);
+              }
+          }
+          _rref=[];
+          if (con.config.list_func) {
+              // Create couchcdb list:
+              con.config.list_func();
+              for (_i = 0, _len = _llist.total_rows; _i < _len; _i++) {
+                  var ref={
+                      doc: _llist.rows[_i].value,
+                      id: _llist.rows[_i].id
+                  };
+                  _rref.push(ref);
+              }
+          } else {
+              for (_i = 0, _len = _vlist.length; _i < _len; _i++) {
+                  var ref={
+                      doc: _vlist.rows[_i].value,
+                      id: _vlist.rows[_i].id
+                  };
+                  _rref.push(ref);
+              }
+          }
+      }
       _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        _doc = _ref[_i];
+      for (_i = 0, _len = _rref.length; _i < _len; _i++) {
+        _doc = _rref[_i];
+//        console.log('changed doc ' + _doc.id);
         obj = this.get(_doc.id);
         if (obj != null) {
           if (_doc.deleted) {
+//            console.log('deleted doc ' + _doc.id);
             _results.push(this.remove(obj));
           } else {
             if (obj.get("_rev") !== _doc.doc._rev) {
+//              console.log('changed doc ' + _doc.id);
               _results.push(obj.set(_doc.doc));
             } else {
+//              console.log('no changes: ' + _doc.id);
               _results.push(void 0);
             }
           }
         } else {
           if (!_doc.deleted) {
+//            console.log('new doc: ' + _doc.id);
             _results.push(this.add(_doc.doc));
           } else {
+//            console.log('new but already deleted: ' + _doc.id);
             _results.push(void 0);
           }
         }
