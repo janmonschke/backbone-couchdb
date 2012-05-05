@@ -64,11 +64,14 @@ Backbone.couch_connector = con =
         _ddoc = coll.db.ddoc
       if coll.db.keys?
         keys = coll.db.keys 
+      if coll.db.include_docs?
+        include_docs = coll.db.include_docs
       if coll.db.list?
         _list = coll.db.list
     
     _opts = 
       keys : keys
+      include_docs : include_docs
       success : (data) =>
         _temp = []
         for doc in data.rows
@@ -98,6 +101,12 @@ Backbone.couch_connector = con =
 
     if opts.endkey?
        _opts.endkey = opts.endkey;
+       
+    if opts.key?
+       _opts.key = opts.key;
+    
+    if opts.keys?
+       _opts.keys = opts.keys;
 
     if opts.startkey_docid?
        _opts.startkey_docid = opts.startkey_docid;
@@ -106,7 +115,7 @@ Backbone.couch_connector = con =
        _opts.endkey_docid = opts.endkey_docid;
 
     # delete keys if a custom view is requested but no custom keys 
-    if coll.db? and coll.db.view? and not coll.db.keys?
+    if (coll.db? and coll.db.view? and not coll.db.keys? and not opts.keys?) or opts.key
       delete _opts.keys
     
     if _list 
@@ -224,6 +233,8 @@ class Backbone.Collection extends Backbone.Collection
       collection : con.helpers.extract_collection_name(@)
       filter : "#{con.config.ddoc_name}/by_collection"
     _.extend opts, @db
+    if opts.filter == "_view"
+      opts.view = (opts.ddoc || con.config.ddoc_name) + "/" + opts.view
     _.defer => 
       @_db_changes_handler = @_db_inst.changes(@_db_update_seq, opts)
       @_db_changes_handler.onChange @._db_on_change
