@@ -1,4 +1,3 @@
-
 /*
 (c) 2011 Jan Monschke
 v1.1
@@ -101,6 +100,7 @@ backbone-couchdb.js is licensed under the MIT license.
       if (opts.limit != null) _opts.limit = opts.limit;
       if (opts.skip != null) _opts.skip = opts.skip;
       if (opts.include_docs != null) _opts.include_docs = opts.include_docs;
+      if (opts.reduce != null) _opts.reduce = opts.reduce;
       if (opts.startkey != null) _opts.startkey = opts.startkey;
       if (opts.endkey != null) _opts.endkey = opts.endkey;
       if (opts.startkey_docid != null) _opts.startkey_docid = opts.startkey_docid;
