@@ -233,6 +233,8 @@ class Backbone.Collection extends Backbone.Collection
       collection : con.helpers.extract_collection_name(@)
       filter : "#{con.config.ddoc_name}/by_collection"
     _.extend opts, @db
+    if opts.filter == "_view"
+      opts.view = (opts.ddoc || con.config.ddoc_name) + "/" + opts.view
     _.defer => 
       @_db_changes_handler = @_db_inst.changes(@_db_update_seq, opts)
       @_db_changes_handler.onChange @._db_on_change

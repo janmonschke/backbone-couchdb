@@ -328,6 +328,9 @@ backbone-couchdb.js is licensed under the MIT license.
         filter: "" + con.config.ddoc_name + "/by_collection"
       };
       _.extend(opts, this.db);
+      if (opts.filter === "_view") {
+        opts.view = (opts.ddoc || con.config.ddoc_name) + "/" + opts.view;
+      }
       return _.defer(function() {
         _this._db_changes_handler = _this._db_inst.changes(_this._db_update_seq, opts);
         return _this._db_changes_handler.onChange(_this._db_on_change);
