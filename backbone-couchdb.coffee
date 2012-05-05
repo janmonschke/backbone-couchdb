@@ -105,6 +105,12 @@ Backbone.couch_connector = con =
     if opts.endkey_docid?
        _opts.endkey_docid = opts.endkey_docid;
 
+    if opts.reduce?
+       _opts.reduce = opts.reduce;
+
+    if opts.group?
+       _opts.group = opts.group;
+
     # delete keys if a custom view is requested but no custom keys 
     if coll.db? and coll.db.view? and not coll.db.keys?
       delete _opts.keys
