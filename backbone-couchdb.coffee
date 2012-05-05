@@ -64,11 +64,14 @@ Backbone.couch_connector = con =
         _ddoc = coll.db.ddoc
       if coll.db.keys?
         keys = coll.db.keys 
+      if coll.db.include_docs?
+        include_docs = coll.db.include_docs
       if coll.db.list?
         _list = coll.db.list
     
     _opts = 
       keys : keys
+      include_docs : include_docs
       success : (data) =>
         _temp = []
         for doc in data.rows
