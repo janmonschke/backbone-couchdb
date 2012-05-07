@@ -67,6 +67,7 @@ backbone-couchdb.js is licensed under the MIT license.
       _ddoc = this.config.ddoc_name;
       _list = this.config.list_name;
       keys = [this.helpers.extract_collection_name(coll)];
+      include_docs = false;
       if (coll.db != null) {
         if (coll.db.changes || this.config.global_changes) {
           coll.listen_to_changes();

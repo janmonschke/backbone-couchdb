@@ -56,6 +56,7 @@ Backbone.couch_connector = con =
     _ddoc = @config.ddoc_name
     _list = @config.list_name
     keys = [@helpers.extract_collection_name coll]
+    include_docs = false
     if coll.db?
       coll.listen_to_changes() if coll.db.changes or @config.global_changes
       if coll.db.view?
