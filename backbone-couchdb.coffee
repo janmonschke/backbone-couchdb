@@ -56,6 +56,7 @@ Backbone.couch_connector = con =
     _ddoc = @config.ddoc_name
     _list = @config.list_name
     keys = [@helpers.extract_collection_name coll]
+    include_docs = false
     if coll.db?
       coll.listen_to_changes() if coll.db.changes or @config.global_changes
       if coll.db.view?
@@ -64,15 +65,18 @@ Backbone.couch_connector = con =
         _ddoc = coll.db.ddoc
       if coll.db.keys?
         keys = coll.db.keys 
+      if coll.db.include_docs?
+        include_docs = coll.db.include_docs
       if coll.db.list?
         _list = coll.db.list
     
     _opts = 
       keys : keys
+      include_docs : include_docs
       success : (data) =>
         _temp = []
         for doc in data.rows
-          if doc.value then _temp.push doc.value else _temp.push doc.doc
+          if doc.value and not (doc.doc and include_docs) then _temp.push doc.value else _temp.push doc.doc
         opts.success _temp
         opts.complete()
       error : (status, error, reason) ->
