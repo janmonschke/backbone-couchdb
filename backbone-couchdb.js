@@ -97,7 +97,7 @@ backbone-couchdb.js is licensed under the MIT license.
           _ref = data.rows;
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             doc = _ref[_i];
-            if (doc.value) {
+            if (doc.value && !(doc.doc && include_docs)) {
               _temp.push(doc.value);
             } else {
               _temp.push(doc.doc);

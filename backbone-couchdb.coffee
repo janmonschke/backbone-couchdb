@@ -76,7 +76,7 @@ Backbone.couch_connector = con =
       success : (data) =>
         _temp = []
         for doc in data.rows
-          if doc.value then _temp.push doc.value else _temp.push doc.doc
+          if doc.value and not (doc.doc and include_docs) then _temp.push doc.value else _temp.push doc.doc
         opts.success _temp
         opts.complete()
       error : (status, error, reason) ->
