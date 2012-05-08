@@ -35,10 +35,47 @@ Backbone.couch_connector = con =
       _name = if _splitted.length > 0 then _splitted[0] else _name
       _name = _name.replace "/", ""
       _name
+      
+    # Adapted from jquery.couch.js  
+    # Convert a options object to an url query string.
+    # ex: {key:'value',key2:'value2'} becomes '?key="value"&key2="value2"'
+    encode_options : (options) ->
+      buf = []
+      if typeof options is "object" and options?
+        for name, value of options
+          continue if name in ["error", "success", "beforeSuccess", "ajaxStart"]
+          value = JSON.stringify value if name in ["key", "startkey", "endkey"]
+          buf.push "#{encodeURIComponent name}=#{encodeURIComponent value}"
+      if buf.length
+        "?#{buf.join '&'}"
+      else ""
+    
+    # Adapted from http://github.com/daleharvey/jquery.couch.js (if the users version doesn't contain it)
+    # Execute an update function for a given document.
+    update_doc : (updateFun, doc_id, options, ajaxOptions) ->
+      ddoc_fun = updateFun.split '/'
+      options ?= {}
+      type = 'PUT'
+      $.ajax
+        type : type
+        data : null
+        beforeSend : (xhr) -> xhr.setRequestHeader 'Accept', '*/*'
+        complete : (req) ->
+          resp = req.responseText
+          if req.status is 201
+            options.success?(resp)
+          else if options.error
+            options.error(req.status, resp.error, resp.reason);
+          else
+            alert "An error occurred getting session info: #{resp.reason}"
+        url : "#{@uri}_design/#{ddoc_fun[0]}/_update/#{ddoc_fun[1]}/#{doc_id}#{@encodeOptions(options)}"
     
     # creates a database instance from the 
     make_db : ->
       db = $.couch.db con.config.db_name
+      if not db.updateDoc?
+        db.updateDoc = _.bind @update_doc, db
+        db.encodeOptions = _.bind @encode_options, db
       if con.config.base_url?
         db.uri = "#{con.config.base_url}/#{con.config.db_name}/";
       db
@@ -151,10 +188,10 @@ Backbone.couch_connector = con =
 
   # Updates a model by it's ID
   update : (model, opts) ->
-    db = @helpers.make_db()
     if not model.updateFun
       @create model, opts
-    else if db.updateDoc
+    # else if db.updateDoc
+    else
       new_opts =
         success : (doc) ->
           opts.success
@@ -174,11 +211,10 @@ Backbone.couch_connector = con =
       else
         _.extend new_opts, model.toJSON()
       @helpers.make_db().updateDoc "#{@config.ddoc_name}/#{model.updateFun}", model.id, new_opts
-    else
-      console.error "Your version of jquery.couch.js does not contain db.updateDoc.
-       To use this feature you must update from https://github.com/daleharvey/jquery.couch.js"
-    
-		
+    # else
+    #   console.error "Your version of jquery.couch.js does not contain db.updateDoc.
+    #    To use this feature you must update from https://github.com/daleharvey/jquery.couch.js"
+	
   # Deletes a model from the db
   del : (model, opts) ->
     @helpers.make_db().removeDoc model.toJSON(),

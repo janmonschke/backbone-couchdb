@@ -38,9 +38,59 @@ backbone-couchdb.js is licensed under the MIT license.
         _name = _name.replace("/", "");
         return _name;
       },
+      encode_options: function(options) {
+        var buf, name, value;
+        buf = [];
+        if (typeof options === "object" && (options != null)) {
+          for (name in options) {
+            value = options[name];
+            if (name === "error" || name === "success" || name === "beforeSuccess" || name === "ajaxStart") {
+              continue;
+            }
+            if (name === "key" || name === "startkey" || name === "endkey") {
+              value = JSON.stringify(value);
+            }
+            buf.push("" + (encodeURIComponent(name)) + "=" + (encodeURIComponent(value)));
+          }
+        }
+        if (buf.length) {
+          return "?" + (buf.join('&'));
+        } else {
+          return "";
+        }
+      },
+      update_doc: function(updateFun, doc_id, options, ajaxOptions) {
+        var ddoc_fun, type;
+        ddoc_fun = updateFun.split('/');
+        if (options == null) options = {};
+        type = 'PUT';
+        return $.ajax({
+          type: type,
+          data: null,
+          beforeSend: function(xhr) {
+            return xhr.setRequestHeader('Accept', '*/*');
+          },
+          complete: function(req) {
+            var resp;
+            resp = req.responseText;
+            if (req.status === 201) {
+              return typeof options.success === "function" ? options.success(resp) : void 0;
+            } else if (options.error) {
+              return options.error(req.status, resp.error, resp.reason);
+            } else {
+              return alert("An error occurred getting session info: " + resp.reason);
+            }
+          },
+          url: "" + this.uri + "_design/" + ddoc_fun[0] + "/_update/" + ddoc_fun[1] + "/" + doc_id + (this.encodeOptions(options))
+        });
+      },
       make_db: function() {
         var db;
         db = $.couch.db(con.config.db_name);
+        if (!(db.updateDoc != null)) {
+          db.updateDoc = _.bind(this.update_doc, db);
+          db.encodeOptions = _.bind(this.encode_options, db);
+        }
         if (con.config.base_url != null) {
           db.uri = "" + con.config.base_url + "/" + con.config.db_name + "/";
         }
@@ -161,11 +211,10 @@ backbone-couchdb.js is licensed under the MIT license.
       });
     },
     update: function(model, opts) {
-      var changedKeys, db, new_opts;
-      db = this.helpers.make_db();
+      var changedKeys, new_opts;
       if (!model.updateFun) {
         return this.create(model, opts);
-      } else if (db.updateDoc) {
+      } else {
         new_opts = {
           success: function(doc) {
             opts.success({
@@ -192,8 +241,6 @@ backbone-couchdb.js is licensed under the MIT license.
           _.extend(new_opts, model.toJSON());
         }
         return this.helpers.make_db().updateDoc("" + this.config.ddoc_name + "/" + model.updateFun, model.id, new_opts);
-      } else {
-        return console.error("Your version of jquery.couch.js does not contain db.updateDoc.       To use this feature you must update from https://github.com/daleharvey/jquery.couch.js");
       }
     },
     del: function(model, opts) {
