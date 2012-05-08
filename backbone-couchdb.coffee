@@ -73,9 +73,6 @@ Backbone.couch_connector = con =
     # creates a database instance from the 
     make_db : ->
       db = $.couch.db con.config.db_name
-      if not db.updateDoc?
-        db.updateDoc = _.bind @update_doc, db
-        db.encodeOptions = _.bind @encode_options, db
       if con.config.base_url?
         db.uri = "#{con.config.base_url}/#{con.config.db_name}/";
       db
@@ -190,8 +187,12 @@ Backbone.couch_connector = con =
   update : (model, opts) ->
     if not model.updateFun
       @create model, opts
-    # else if db.updateDoc
     else
+      db = @helpers.make_db()
+      if not db.updateDoc?
+        db.updateDoc = _.bind @helpers.update_doc, db
+        db.encodeOptions = _.bind @helpers.encode_options, db
+        
       new_opts =
         success : (doc) ->
           opts.success
@@ -210,10 +211,7 @@ Backbone.couch_connector = con =
         _.extend new_opts, _.pick model.toJSON(), changedKeys
       else
         _.extend new_opts, model.toJSON()
-      @helpers.make_db().updateDoc "#{@config.ddoc_name}/#{model.updateFun}", model.id, new_opts
-    # else
-    #   console.error "Your version of jquery.couch.js does not contain db.updateDoc.
-    #    To use this feature you must update from https://github.com/daleharvey/jquery.couch.js"
+      db.updateDoc "#{@config.ddoc_name}/#{model.updateFun}", model.id, new_opts
 	
   # Deletes a model from the db
   del : (model, opts) ->

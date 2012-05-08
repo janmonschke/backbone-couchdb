@@ -87,10 +87,6 @@ backbone-couchdb.js is licensed under the MIT license.
       make_db: function() {
         var db;
         db = $.couch.db(con.config.db_name);
-        if (!(db.updateDoc != null)) {
-          db.updateDoc = _.bind(this.update_doc, db);
-          db.encodeOptions = _.bind(this.encode_options, db);
-        }
         if (con.config.base_url != null) {
           db.uri = "" + con.config.base_url + "/" + con.config.db_name + "/";
         }
@@ -211,10 +207,15 @@ backbone-couchdb.js is licensed under the MIT license.
       });
     },
     update: function(model, opts) {
-      var changedKeys, new_opts;
+      var changedKeys, db, new_opts;
       if (!model.updateFun) {
         return this.create(model, opts);
       } else {
+        db = this.helpers.make_db();
+        if (!(db.updateDoc != null)) {
+          db.updateDoc = _.bind(this.helpers.update_doc, db);
+          db.encodeOptions = _.bind(this.helpers.encode_options, db);
+        }
         new_opts = {
           success: function(doc) {
             opts.success({
@@ -240,7 +241,7 @@ backbone-couchdb.js is licensed under the MIT license.
         } else {
           _.extend(new_opts, model.toJSON());
         }
-        return this.helpers.make_db().updateDoc("" + this.config.ddoc_name + "/" + model.updateFun, model.id, new_opts);
+        return db.updateDoc("" + this.config.ddoc_name + "/" + model.updateFun, model.id, new_opts);
       }
     },
     del: function(model, opts) {
