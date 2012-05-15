@@ -1,4 +1,3 @@
-
 /*
 (c) 2011 Jan Monschke
 v1.1
@@ -18,7 +17,8 @@ backbone-couchdb.js is licensed under the MIT license.
       view_name: "byCollection",
       list_name: null,
       global_changes: false,
-      base_url: null
+      base_url: null,
+      include_docs: true
     },
     helpers: {
       extract_collection_name: function(model) {
@@ -71,6 +71,7 @@ backbone-couchdb.js is licensed under the MIT license.
         if (coll.db.list != null) _list = coll.db.list;
       }
       _opts = {
+        include_docs: this.config.include_docs,
         keys: keys,
         success: function(data) {
           var doc, _i, _len, _ref, _temp;
