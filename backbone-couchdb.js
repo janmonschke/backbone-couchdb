@@ -2,9 +2,36 @@
 (c) 2011 Jan Monschke
 v1.1
 backbone-couchdb.js is licensed under the MIT license.
+
+-- 2012 -- modified by Alexey Martyushenko: 
+   i) Handle generic views and JSON emitting lists
+   ii) Multiple connections to databases and views
 */
 
 (function() {
+  // Override the jquery.couch changes:
+/*  Attempt to redefine jQuery function (does not work):
+	 purtropo non possibile
+     $.couch.changes.getChangesSince = function () {
+            var opts;
+	    if (!options.timeout) {
+	    	opts= $.extend({heartbeat : 10 * 1000}, options,
+                {feed : "longpoll",
+                since : since
+                });
+	    } else {
+	    	opts= $.extend(options,
+                {feed : "longpoll",
+                since : since
+                });
+	    }	
+            ajax(
+              {url: db.uri + "_changes"+encodeOptions(opts)},
+              options,
+              "Error connecting to "+db.uri+"/_changes."
+            );
+  }*/
+
   var _vlist=[];
   var _llist={};
   var _irow=0;
@@ -66,6 +93,7 @@ backbone-couchdb.js is licensed under the MIT license.
           base_url: null,
           view_func: null,
 //          uid: null,      // UUID (for debugging)
+          timeout: -1,
           list_func: null
         },
         helpers: {
@@ -301,6 +329,9 @@ backbone-couchdb.js is licensed under the MIT license.
         collection: this.con.helpers.extract_collection_name(this),
         filter: "" + this.con.config.ddoc_name + "/by_collection"
       };
+      if (this.con.config.timeout > 0) {
+        opts['timeout']= this.con.config.timeout;
+      }
       _.extend(opts, this.db);
       return _.defer(function() {
         _this._db_changes_handler = _this._db_inst.changes(_this._db_update_seq, opts);
@@ -317,9 +348,9 @@ backbone-couchdb.js is licensed under the MIT license.
               _doc = _ref[_i];
               if (_doc) {
                   if (_doc.doc)
-                      this.con.config.view_func(_doc.doc);
+                    this.con.config.view_func(_doc.doc, true);
                   else
-                      this.con.config.view_func(_doc);
+                    this.con.config.view_func(_doc, true);
               }
           }
           _rref=[];
@@ -349,7 +380,7 @@ backbone-couchdb.js is licensed under the MIT license.
 //        console.log('reported doc ' + _doc.id);
         obj = this.get(_doc.id);
         if (obj != null) {
-          if (_doc.deleted) {
+          if (_doc.deleted || _doc.doc._deleted) {
 //            console.log('deleted doc ' + _doc.id);
             _results.push(this.remove(obj));
           } else {
@@ -362,7 +393,7 @@ backbone-couchdb.js is licensed under the MIT license.
             }
           }
         } else {
-          if (!_doc.deleted) {
+          if (!_doc.deleted && !_doc.doc._deleted) {
 //            console.log('new doc: ' + _doc.id);
             _results.push(this.add(_doc.doc));
           } else {
