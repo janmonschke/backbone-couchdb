@@ -84,7 +84,27 @@ Backbone.couch_connector = con =
         opts.complete res
 
     # support view querying opts http://wiki.apache.org/couchdb/HTTP_view_API    
-    for option in "limit,skip,include_docs,startkey,endkey,startkey_docid,endkey_docid,key".split(",")
+
+    view_options = [
+      "key"
+      "keys"
+      "startkey"
+      "startkey_docid"
+      "endkey"
+      "endkey_docid"
+      "limit"
+      "stale"
+      "descending"
+      "skip"
+      "group"
+      "group_level"
+      "reduce"
+      "include_docs"
+      "inclusive_end"
+      "update_seq"
+    ]
+
+    for option in view_options
       if opts[option]?
         _opts[option] = opts[option]
 

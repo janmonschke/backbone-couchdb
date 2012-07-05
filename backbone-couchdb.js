@@ -58,7 +58,7 @@ Backbone.couch_connector = con = {
     }
   },
   read_collection: function(coll, opts) {
-    var keys, option, _ddoc, _i, _len, _list, _opts, _ref, _view,
+    var keys, option, view_options, _ddoc, _i, _len, _list, _opts, _view,
       _this = this;
     _view = this.config.view_name;
     _ddoc = this.config.ddoc_name;
@@ -109,9 +109,9 @@ Backbone.couch_connector = con = {
         return opts.complete(res);
       }
     };
-    _ref = "limit,skip,include_docs,startkey,endkey,startkey_docid,endkey_docid,key".split(",");
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      option = _ref[_i];
+    view_options = ["key", "keys", "startkey", "startkey_docid", "endkey", "endkey_docid", "limit", "stale", "descending", "skip", "group", "group_level", "reduce", "include_docs", "inclusive_end", "update_seq"];
+    for (_i = 0, _len = view_options.length; _i < _len; _i++) {
+      option = view_options[_i];
       if (opts[option] != null) {
         _opts[option] = opts[option];
       }
