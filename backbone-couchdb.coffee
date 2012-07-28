@@ -1,6 +1,6 @@
 ###
 (c) 2011 Jan Monschke
-v1.1
+v1.2.2
 backbone-couchdb.js is licensed under the MIT license.
 ###
 
