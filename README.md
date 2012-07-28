@@ -16,6 +16,9 @@ Demos
 
 Changelog
 ---------
+* 1.2.2
+  * Revamped view options [#51](https://github.com/janmonschke/backbone-couchdb/pull/51)
+
 * 1.2
   * CouchDB list support [#37](https://github.com/janmonschke/backbone-couchdb/pull/37)
   * Support for custom design documents for collections [#38](https://github.com/janmonschke/backbone-couchdb/pull/38)
