@@ -120,7 +120,7 @@ Backbone.couch_connector = con = {
       delete _opts.keys;
     }
     if (_list) {
-      return this.helpers.make_db().list("" + _ddoc + "/" + _list, "" + _view, _opts);
+      return this.helpers.make_db().list("" + _ddoc + "/" + _list, "" + _view, _opts, _opts);
     } else {
       return this.helpers.make_db().view("" + _ddoc + "/" + _view, _opts);
     }
