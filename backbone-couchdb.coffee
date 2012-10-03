@@ -1,6 +1,6 @@
 ###
-(c) 2011 Jan Monschke
-v1.1
+(c) 2012 Jan Monschke
+v1.3
 backbone-couchdb.js is licensed under the MIT license.
 ###
 
@@ -10,6 +10,7 @@ Backbone.couch_connector = con =
     db_name : "backbone_connect"
     ddoc_name : "backbone_example"
     view_name : "byCollection"
+    list_name : null
     # if true, all Collections will have the _changes feed enabled
     global_changes : false
     # if true, a single changes feed connection will be used
@@ -38,17 +39,8 @@ Backbone.couch_connector = con =
       # jquery.couch.js adds the id itself, so we delete the id if it is in the url.
       # "collection/:id" -> "collection"
       _splitted = _name.split "/"
-
-      # only pop off the last component if it is the id
-      if (_splitted.length > 0)
-        if (model.id == _splitted[_splitted.length - 1])
-          _splitted.pop()
-        _name = _splitted.join('/')
-
-      # remove any leading slash
-      if (_name.indexOf("/") == 0)
-        _name = _name.replace("/", "")
-
+      _name = if _splitted.length > 0 then _splitted[0] else _name
+      _name = _name.replace "/", ""
       _name
     
     # default local filter which selects documents of a given collection
@@ -72,29 +64,69 @@ Backbone.couch_connector = con =
   # Reads all docs of a collection based on the byCollection view or a custom view specified by the collection
   read_collection : (coll, opts) ->
     _view = @config.view_name
+    _ddoc = @config.ddoc_name
+    _list = @config.list_name
     keys = [@helpers.extract_collection_name coll]
     if coll.db?
       coll.listen_to_changes() if coll.db.changes or @config.global_changes
       if coll.db.view?
         _view = coll.db.view
+      if coll.db.ddoc?
+        _ddoc = coll.db.ddoc
       if coll.db.keys?
         keys = coll.db.keys 
+      if coll.db.list?
+        _list = coll.db.list
     
     _opts = 
       keys : keys
       success : (data) =>
         _temp = []
         for doc in data.rows
-          _temp.push doc.value
+          if doc.value then _temp.push doc.value else _temp.push doc.doc
         opts.success _temp
-      error : ->
-        opts.error()
-    
+        opts.complete()
+      error : (status, error, reason) ->
+        res = 
+          status: status
+          error: error
+          reason: reason
+        opts.error res
+        opts.complete res
+
+    # support view querying opts http://wiki.apache.org/couchdb/HTTP_view_API    
+
+    view_options = [
+      "key"
+      "keys"
+      "startkey"
+      "startkey_docid"
+      "endkey"
+      "endkey_docid"
+      "limit"
+      "stale"
+      "descending"
+      "skip"
+      "group"
+      "group_level"
+      "reduce"
+      "include_docs"
+      "inclusive_end"
+      "update_seq"
+    ]
+
+    for option in view_options
+      if opts[option]?
+        _opts[option] = opts[option]
+
     # delete keys if a custom view is requested but no custom keys 
     if coll.db? and coll.db.view? and not coll.db.keys?
       delete _opts.keys
     
-    @helpers.make_db().view "#{@config.ddoc_name}/#{_view}", _opts
+    if _list 
+      @helpers.make_db().list "#{_ddoc}/#{_list}", "#{_view}", _opts   
+    else
+      @helpers.make_db().view "#{_ddoc}/#{_view}", _opts    
 
   # initializes the single global changes handler
   init_global_changes_handler : (callback) ->
@@ -124,8 +156,14 @@ Backbone.couch_connector = con =
     @helpers.make_db().openDoc model.id,
       success : (doc) -> 
         opts.success(doc)
-      error : ->
-        opts.error()
+        opts.complete()
+      error : (status, error, reason) ->
+        res = 
+          status: status
+          error: error
+          reason: reason
+        opts.error res
+        opts.complete res
   
   # Creates a model in the db
   create : (model, opts) ->
@@ -137,8 +175,14 @@ Backbone.couch_connector = con =
         opts.success
           _id : doc.id
           _rev : doc.rev
-      error : ->
-        opts.error()
+        opts.complete()
+      error : (status, error, reason) ->
+        res = 
+          status: status
+          error: error
+          reason: reason
+        opts.error res
+        opts.complete res
 
   # jquery.couch.js uses the same method for updating as it uses for creating a document, so we can use the `create` method here. ###
   update : (model, opts) ->
@@ -153,19 +197,42 @@ Backbone.couch_connector = con =
         if e == "deleted"
           # The doc does no longer exist on the server
           opts.success()
+          opts.complete()
         else
-          opts.error()
+          res = 
+            status: status
+            error: error
+            reason: reason
+          opts.error res
+          opts.complete res
 
 # Overriding the sync method here to make the connector work ###
 Backbone.sync = (method, model, opts) ->
+  opts.success ?= ->
+  opts.error ?= ->
+  opts.complete ?= ->
+  
   switch method
     when "read" then con.read model, opts
     when "create" then con.create model, opts
     when "update" then con.update model, opts
     when "delete" then con.del model, opts
 
+class Backbone.Model extends Backbone.Model
+  # change the idAttribute since CouchDB uses _id
+  idAttribute : "_id"
+  clone : ->
+    new_model = new @constructor(@)
+    # remove _id and _rev attributes on the cloned model object to have a **really** new, unsaved model object.
+    # _id and _rev only exist on objects that have been saved, so check for existence is needed.
+    delete new_model.attributes._id if new_model.attributes._id
+    delete new_model.attributes._rev if new_model.attributes._rev
+    new_model
+
 # Adds some more methods to Collections that are needed for the connector ###
 class Backbone.Collection extends Backbone.Collection
+  model : Backbone.Model
+  
   initialize : ->
     @listen_to_changes() if !@_db_changes_enabled && ((@db and @db.changes) or con.config.global_changes)
 
@@ -224,8 +291,4 @@ class Backbone.Collection extends Backbone.Collection
           obj.set _doc.doc unless obj.get("_rev") == _doc.doc._rev 
       else
         @add _doc.doc if !_doc.deleted
-      
 
-class Backbone.Model extends Backbone.Model
-  # change the idAttribute since CouchDB uses _id
-  idAttribute : "_id"
