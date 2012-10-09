@@ -16,13 +16,17 @@ Demos
 
 Changelog
 ---------
-* 1.2 (not yet released, still preparing)
+* 1.2.2
+  * Revamped view options [#51](https://github.com/janmonschke/backbone-couchdb/pull/51)
+
+* 1.2
   * CouchDB list support [#37](https://github.com/janmonschke/backbone-couchdb/pull/37)
   * Support for custom design documents for collections [#38](https://github.com/janmonschke/backbone-couchdb/pull/38)
   * Fix for views that emit `null` [#35](https://github.com/janmonschke/backbone-couchdb/pull/35)
   * A better way to test the library [/test](https://github.com/janmonschke/backbone-couchdb/tree/master/test)
   * more request information in error callbacks [#20](https://github.com/janmonschke/backbone-couchdb/issues/20#issuecomment-5461404)
   * Support for more options when fetching a collection [#34](https://github.com/janmonschke/backbone-couchdb/pull/34)
+  * tested with Backbone 0.9.2
 
 * 1.1
   * Fixed a bug with empty key param
