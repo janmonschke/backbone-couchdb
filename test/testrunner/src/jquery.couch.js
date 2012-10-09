@@ -151,7 +151,7 @@
           } else if (options.error) {
             options.error(req.status, resp.error, resp.reason);
           } else {
-            alert("An error occurred getting session info: " + resp.reason);
+            throw "An error occurred getting session info: " + resp.reason;
           }
         }
       });
@@ -182,35 +182,15 @@
      */
     signup: function(user_doc, password, options) {      
       options = options || {};
-      // prepare user doc based on name and password
-      user_doc = this.prepareUserDoc(user_doc, password);
+      user_doc.password = password;
+      user_doc.roles =  user_doc.roles || [];
+      user_doc.type =  user_doc.type = "user" || [];
+      var user_prefix = "org.couchdb.user:";
+      user_doc._id = user_doc._id || user_prefix + user_doc.name;
+
       $.couch.userDb(function(db) {
         db.saveDoc(user_doc, options);
       });
-    },
-
-    /**
-     * Populates a user doc with a new password.
-     * @param {Object} user_doc User details
-     * @param {String} new_password New Password
-     */
-    prepareUserDoc: function(user_doc, new_password) {
-      if (typeof hex_sha1 == "undefined") {
-        alert("creating a user doc requires sha1.js to be loaded in the page");
-        return;
-      }
-      var user_prefix = "org.couchdb.user:";
-      user_doc._id = user_doc._id || user_prefix + user_doc.name;
-      if (new_password) {
-        // handle the password crypto
-        user_doc.salt = $.couch.newUUID();
-        user_doc.password_sha = hex_sha1(new_password + user_doc.salt);
-      }
-      user_doc.type = "user";
-      if (!user_doc.roles) {
-        user_doc.roles = [];
-      }
-      return user_doc;
     },
 
     /**
@@ -235,7 +215,7 @@
           } else if (options.error) {
             options.error(req.status, resp.error, resp.reason);
           } else {
-            alert("An error occurred logging in: " + resp.reason);
+            throw 'An error occurred logging in: ' + resp.reason;
           }
         }
       });
@@ -263,7 +243,7 @@
           } else if (options.error) {
             options.error(req.status, resp.error, resp.reason);
           } else {
-            alert("An error occurred logging out: " + resp.reason);
+            throw 'An error occurred logging out: ' + resp.reason;
           }
         }
       });
@@ -288,9 +268,7 @@
             rawDocs[doc._id].rev == doc._rev) {
           // todo: can we use commonjs require here?
           if (typeof Base64 == "undefined") {
-            alert("please include /_utils/script/base64.js in the page for " +
-                  "base64 support");
-            return false;
+            throw 'Base64 support not found.';
           } else {
             doc._attachments = doc._attachments || {};
             doc._attachments["rev-"+doc._rev.split("-")[0]] = {
@@ -576,7 +554,7 @@
               }
             });
           } else {
-            alert("Please provide an eachApp function for allApps()");
+            throw 'Please provide an eachApp function for allApps()';
           }
         },
 
@@ -670,7 +648,7 @@
               } else if (options.error) {
                 options.error(req.status, resp.error, resp.reason);
               } else {
-                alert("The document could not be saved: " + resp.reason);
+                throw "The document could not be saved: " + resp.reason;
               }
             }
           });
@@ -697,6 +675,25 @@
             "The documents could not be saved"
           );
         },
+        
+        // Execute an update function for a given document.
+      	updateDoc: function(updateFun, doc_id, options, ajaxOptions) {
+      	  var ddoc_fun = updateFun.split('/');
+      	  var options = options || {};
+      	  var type = 'PUT';
+          var data = null;
+          $.extend(options, {successStatus: 201});
+          ajax({
+            type: type,
+            data: data,
+            url : this.uri + '_design/' + ddoc_fun[0] +
+              '/_update/' + ddoc_fun[1] + '/' + doc_id + encodeOptions(options)
+          }, options, "An error occured getting session info",{
+            headers : {
+              'Accept' : '*/*'
+            }
+          });
+      	},
 
         /**
          * Deletes the specified document from the database. You must supply
@@ -768,7 +765,7 @@
               } else if (options.error) {
                 options.error(req.status, resp.error, resp.reason);
               } else {
-                alert("The document could not be copied: " + resp.reason);
+                throw "The document could not be copied: " + resp.reason;
               }
             }
           });
@@ -849,7 +846,7 @@
               url: this.uri + '_design/' + list[0] +
                    '/_list/' + list[1] + '/' + view + encodeOptions(options)
               },
-              ajaxOptions, 'An error occured accessing the list'
+              options, 'An error occured accessing the list', ajaxOptions
           );
         },
 
@@ -1005,7 +1002,7 @@
    * @private
    */
   function ajax(obj, options, errorMessage, ajaxOptions) {
-
+    var timeStart;
     var defaultAjaxOpts = {
       contentType: "application/json",
       headers:{"Accept": "application/json"}
@@ -1014,6 +1011,7 @@
     options = $.extend({successStatus: 200}, options);
     ajaxOptions = $.extend(defaultAjaxOpts, ajaxOptions);
     errorMessage = errorMessage || "Unknown error";
+    timeStart = (new Date()).getTime();
     $.ajax($.extend($.extend({
       type: "GET", dataType: "json", cache : !$.browser.msie,
       beforeSend: function(xhr){
@@ -1024,30 +1022,29 @@
         }
       },
       complete: function(req) {
+        var reqDuration = (new Date()).getTime() - timeStart;
         try {
           var resp = $.parseJSON(req.responseText);
         } catch(e) {
           if (options.error) {
             options.error(req.status, req, e);
           } else {
-            alert(errorMessage + ": " + e);
+            throw errorMessage + ': ' + e;
           }
           return;
         }
         if (options.ajaxStart) {
           options.ajaxStart(resp);
         }
-
-        console.log(arguments, resp, options.successStatus, options);
-
         if (req.status == options.successStatus) {
-          if (options.beforeSuccess) options.beforeSuccess(req, resp);
-          if (options.success) options.success(resp);
+          if (options.beforeSuccess) options.beforeSuccess(req, resp, reqDuration);
+          if (options.success) options.success(resp, reqDuration);
         } else if (options.error) {
           options.error(req.status, resp && resp.error ||
-                        errorMessage, resp && resp.reason || "no response");
+                        errorMessage, resp && resp.reason || "no response",
+                        reqDuration);
         } else {
-          alert(errorMessage + ": " + resp.reason);
+          throw errorMessage + ": " + resp.reason;
         }
       }
     }, obj), ajaxOptions));

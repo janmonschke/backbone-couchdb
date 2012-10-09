@@ -143,7 +143,8 @@ Backbone.couch_connector = con =
     if coll.db? and coll.db.view? and not coll.db.keys?
       delete _opts.keys
     
-    if _list 
+    if _list
+      _.extend _opts, opts.list_params if opts.list_params?
       @helpers.make_db().list "#{_ddoc}/#{_list}", "#{_view}", _opts   
     else
       @helpers.make_db().view "#{_ddoc}/#{_view}", _opts    
@@ -213,8 +214,11 @@ Backbone.couch_connector = con =
         _.extend new_opts, model.toJSON()
       db.updateDoc "#{@config.ddoc_name}/#{model.updateFun}", model.id, new_opts
 	
+	del : (model, opts) ->
+		if
+	
   # Deletes a model from the db
-  del : (model, opts) ->
+  del_model : (model, opts) ->
     @helpers.make_db().removeDoc model.toJSON(),
       success : ->
         opts.success()
