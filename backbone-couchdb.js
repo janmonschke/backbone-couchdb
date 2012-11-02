@@ -245,7 +245,7 @@ backbone-couchdb.js is licensed under the MIT license.
         },
         error: function(nr, req, error) {
           var res;
-          if (e === "deleted") {
+          if (error === "deleted") {
             opts.success();
             return opts.complete();
           } else {

@@ -202,7 +202,7 @@ Backbone.couch_connector = con =
       success : ->
         opts.success()
       error : (nr, req, error) ->
-        if e == "deleted"
+        if error is "deleted"
           # The doc does no longer exist on the server
           opts.success()
           opts.complete()
