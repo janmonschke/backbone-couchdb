@@ -16,6 +16,9 @@ Demos
 
 Changelog
 ---------
+* 1.3
+  * Single global changes feed support to stay within the browser's concurrent connections per server limit [#25](https://github.com/janmonschke/backbone-couchdb/pull/25)
+
 * 1.2.2
   * Revamped view options [#51](https://github.com/janmonschke/backbone-couchdb/pull/51)
 
