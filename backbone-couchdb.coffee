@@ -50,6 +50,40 @@ Backbone.couch_connector = con =
       if (_name.indexOf("/") == 0)
         _name = _name.replace("/", "")
       _name
+      
+    # Adapted from jquery.couch.js  
+    # Convert a options object to an url query string.
+    # ex: {key:'value',key2:'value2'} becomes '?key="value"&key2="value2"'
+    encode_options : (options) ->
+      buf = []
+      if typeof options is "object" and options?
+        for name, value of options
+          continue if name in ["error", "success", "beforeSuccess", "ajaxStart"]
+          value = JSON.stringify value if name in ["key", "startkey", "endkey"]
+          buf.push "#{encodeURIComponent name}=#{encodeURIComponent value}"
+      if buf.length
+        "?#{buf.join '&'}"
+      else ""
+    
+    # Adapted from http://github.com/daleharvey/jquery.couch.js (if the users version doesn't contain it)
+    # Execute an update function for a given document.
+    update_doc : (updateFun, doc_id, options, ajaxOptions) ->
+      ddoc_fun = updateFun.split '/'
+      options ?= {}
+      type = 'PUT'
+      $.ajax
+        type : type
+        data : null
+        beforeSend : (xhr) -> xhr.setRequestHeader 'Accept', '*/*'
+        complete : (req) ->
+          resp = req.responseText
+          if req.status is 201
+            options.success?(resp)
+          else if options.error
+            options.error(req.status, resp.error, resp.reason);
+          else
+            alert "An error occurred getting session info: #{resp.reason}"
+        url : "#{@uri}_design/#{ddoc_fun[0]}/_update/#{ddoc_fun[1]}/#{doc_id}#{@encodeOptions(options)}"
     
     # default local filter which selects documents of a given collection
     filter_collection : (results, collection_name) ->
@@ -192,10 +226,36 @@ Backbone.couch_connector = con =
         opts.error res
         opts.complete res
 
-  # jquery.couch.js uses the same method for updating as it uses for creating a document, so we can use the `create` method here. ###
+  # Updates a model by it's ID
   update : (model, opts) ->
-    @create(model, opts)
-
+    if not model.updateFun
+      @create model, opts
+    else
+      db = @helpers.make_db()
+      if not db.updateDoc?
+        db.updateDoc = _.bind @helpers.update_doc, db
+        db.encodeOptions = _.bind @helpers.encode_options, db
+        
+      new_opts =
+        success : (doc) ->
+          opts.success
+            _id : doc.id
+            _rev : doc.rev
+          opts.complete()
+        error : (status, error, reason) ->
+          res =
+            status : status
+            error : error
+            reason : reason
+          opts.error res
+          opts.complete res
+      changedKeys = _.keys opts.changes
+      if changedKeys.length > 0
+        _.extend new_opts, _.pick model.toJSON(), changedKeys
+      else
+        _.extend new_opts, model.toJSON()
+      db.updateDoc "#{@config.ddoc_name}/#{model.updateFun}", model.id, new_opts
+      
   # Deletes a model from the db
   del : (model, opts) ->
     @helpers.make_db().removeDoc model.toJSON(),

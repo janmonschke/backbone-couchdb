@@ -81,7 +81,10 @@ module("db relevant", {
                "testView": {
                     "map": "function(doc) {\n  if (doc.body && doc.body == 'test3') {\n    emit(doc.title, doc);\n  }\n};"
                 }
-           }
+           },
+					"updates": {
+						"update_text": "function(doc, req) {\n  if (req.query.text) {\n    doc.text = 'You HAVE changed!!!';\n    return [doc, JSON.stringify(req.query)];\n  }\n}"
+					}
         };
         var test_doc_1 = { _id : "test_id_4711", collection: "comments", title: "test1", body : "test1" };
         var test_doc_2 = { collection: "comments", title: "test2", body : "test2" };
@@ -256,6 +259,77 @@ asyncTest("update model", function(){
         },
         error : function(){}
       })
+    },
+    error : function(){
+      alert("Model could not be fetched");
+    }
+  });
+});
+
+asyncTest("update model using an update handler", function(){
+  var CommentModel = Backbone.Model.extend({updateFun : "update_text"});
+  
+  mymodel = new CommentModel({_id : "test_id_4711"});
+  
+  mymodel.url = "";
+  
+  var changed_text = "I've changed!!!";
+  
+  mymodel.fetch({
+    success : function(){
+      var the_rev = mymodel.get('_rev');
+      mymodel.set({text : changed_text});
+      mymodel.save({},{
+        success : function(){
+          var new_model = new CommentModel({_id : "test_id_4711"});
+          new_model.fetch({
+            success : function(){
+              start();
+              notEqual(new_model.get('text'), changed_text, "The text should have been changed by the update handler");
+              equals(new_model.get('text'), "You HAVE changed!!!", "The text should have been changed by the update handler");
+              notEqual(new_model.get('_rev'), the_rev, "The _rev attribute should have changed");
+            }
+          });
+        },
+        error : function(){
+          alert("The model could not be updated");
+        }
+      });
+    },
+    error : function(){
+      alert("Model could not be fetched");
+    }
+  });
+});
+
+asyncTest("update model using an update handler passing changes to save", function(){
+  var CommentModel = Backbone.Model.extend({updateFun : "update_text"});
+  
+  mymodel = new CommentModel({_id : "test_id_4711"});
+  
+  mymodel.url = "";
+  
+  var changed_text = "I've changed!!!";
+  
+  mymodel.fetch({
+    success : function(){
+      var the_rev = mymodel.get('_rev');
+      mymodel.save({ text : changed_text },{
+        success : function(){
+          var new_model = new CommentModel({_id : "test_id_4711"});
+          new_model.fetch({
+            success : function(){
+              start();
+              notEqual(new_model.get('text'), changed_text, "The text should have been changed by the update handler");
+              equals(new_model.get('text'), "You HAVE changed!!!", "The text should have been changed by the update handler");
+              notEqual(new_model.get('_rev'), the_rev, "The _rev attribute should have changed");
+            }
+          });
+        },
+        error : function(){
+          alert("The model could not be updated");
+        }
+      });
     },
     error : function(){
       alert("Model could not be fetched");
