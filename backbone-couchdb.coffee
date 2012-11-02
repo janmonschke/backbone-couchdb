@@ -161,7 +161,7 @@ Backbone.couch_connector = con =
     @helpers.make_db().removeDoc model.toJSON(),
       success : ->
         opts.success()
-      error : (nr, req, e) ->
+      error : (nr, req, error) ->
         if e == "deleted"
           # The doc does no longer exist on the server
           opts.success()
