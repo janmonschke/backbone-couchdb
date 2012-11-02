@@ -250,9 +250,7 @@ backbone-couchdb.js is licensed under the MIT license.
             return opts.complete();
           } else {
             res = {
-              status: status,
-              error: error,
-              reason: reason
+              error: error
             };
             opts.error(res);
             return opts.complete(res);

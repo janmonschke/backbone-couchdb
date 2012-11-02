@@ -208,9 +208,7 @@ Backbone.couch_connector = con =
           opts.complete()
         else
           res = 
-            status: status
             error: error
-            reason: reason
           opts.error res
           opts.complete res
 
