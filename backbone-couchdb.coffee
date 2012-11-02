@@ -255,12 +255,8 @@ Backbone.couch_connector = con =
       else
         _.extend new_opts, model.toJSON()
       db.updateDoc "#{@config.ddoc_name}/#{model.updateFun}", model.id, new_opts
-	
-<<<<<<< HEAD
-	# Deletes a model from the db
-=======
+      
   # Deletes a model from the db
->>>>>>> parent of 0267275... Adding test for update
   del : (model, opts) ->
     @helpers.make_db().removeDoc model.toJSON(),
       success : ->
