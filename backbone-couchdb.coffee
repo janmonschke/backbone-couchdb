@@ -269,7 +269,7 @@ class Backbone.Collection extends Backbone.Collection
     opts = 
       include_docs : true
       collection : con.helpers.extract_collection_name(@)
-      filter : "#{con.config.ddoc_name}/by_collection"
+      filters : "#{con.config.ddoc_name}/by_collection"
     _.extend opts, @db
     _.defer => 
       @_db_changes_handler = @_db_inst.changes(@_db_update_seq, opts)
