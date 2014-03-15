@@ -237,6 +237,7 @@ class Backbone.Model extends Backbone.Model
 
 # Adds some more methods to Collections that are needed for the connector ###
 class Backbone.Collection extends Backbone.Collection
+  #The _removeReference function should be overriden in order to remove the attribute collection
   model : Backbone.Model
   
   initialize : ->
